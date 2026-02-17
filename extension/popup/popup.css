@@ -1,0 +1,175 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 320px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: #1a1a2e;
+  background: #f8f9fa;
+}
+
+.popup {
+  padding: 16px;
+}
+
+.popup__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.popup__title {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #16a34a, #0ea5e9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.popup__status {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.popup__status--online {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.popup__status--offline {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.popup__section {
+  margin-bottom: 16px;
+}
+
+.popup__subtitle {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.popup__stats {
+  display: flex;
+  gap: 12px;
+}
+
+.popup__stat {
+  flex: 1;
+  text-align: center;
+  padding: 12px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.popup__stat-value {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.popup__stat-label {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.popup__vin-input {
+  display: flex;
+  gap: 6px;
+}
+
+.popup__vin-input input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'Consolas', monospace;
+  text-transform: uppercase;
+}
+
+.popup__vin-input input:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+}
+
+.popup__vin-input button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #0ea5e9;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.popup__vin-input button:hover {
+  background: #0284c7;
+}
+
+.popup__vin-input button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+.popup__vin-result {
+  margin-top: 10px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.popup__vin-result .label {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.popup__vin-result .value {
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.popup__section--footer {
+  margin-bottom: 0;
+}
+
+.popup__btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.popup__btn--primary {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff;
+}
+
+.popup__btn--primary:hover {
+  background: linear-gradient(135deg, #15803d, #166534);
+}

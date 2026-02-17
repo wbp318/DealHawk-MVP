@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:caredge.com)",
+      "WebFetch(domain:www.coxautoinc.com)",
+      "WebFetch(domain:www.cars.com)",
+      "WebFetch(domain:forum.leasehackr.com)",
+      "WebFetch(domain:www.carsdirect.com)",
+      "WebFetch(domain:fordauthority.com)",
+      "WebFetch(domain:www.denverpost.com)",
+      "WebFetch(domain:www.fordpro.com)",
+      "WebFetch(domain:www.gmenvolve.com)",
+      "WebFetch(domain:www.cbtnews.com)",
+      "WebFetch(domain:carxplorer.com)",
+      "WebFetch(domain:www.worktruckonline.com)",
+      "WebFetch(domain:www.realcartips.com)",
+      "Bash(git -C \"/c/Users/Tap Parker Farms/Documents/vehicle_finder\" log --oneline -5)",
+      "Bash(python -m venv:*)",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python -m backend.seed_data:*)",
+      "Bash(python -c:*)",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(pkill:*)",
+      "Bash(cd:*)",
+      "Bash(git -C /c/Users/\"Tap Parker Farms\"/Documents rev-parse:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

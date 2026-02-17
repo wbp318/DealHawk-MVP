@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="popup.css">
+  <title>DealHawk</title>
+</head>
+<body>
+  <div class="popup">
+    <header class="popup__header">
+      <h1 class="popup__title">DealHawk</h1>
+      <span class="popup__status" id="status-indicator">--</span>
+    </header>
+
+    <section class="popup__section">
+      <div class="popup__stats">
+        <div class="popup__stat">
+          <span class="popup__stat-value" id="listings-count">0</span>
+          <span class="popup__stat-label">Listings Found</span>
+        </div>
+        <div class="popup__stat">
+          <span class="popup__stat-value" id="scored-count">0</span>
+          <span class="popup__stat-label">Scored</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="popup__section">
+      <h2 class="popup__subtitle">Quick VIN Lookup</h2>
+      <div class="popup__vin-input">
+        <input type="text" id="vin-input" placeholder="Enter 17-digit VIN" maxlength="17" spellcheck="false">
+        <button id="vin-decode-btn">Decode</button>
+      </div>
+      <div id="vin-result" class="popup__vin-result" hidden></div>
+    </section>
+
+    <section class="popup__section popup__section--footer">
+      <button id="open-panel-btn" class="popup__btn popup__btn--primary">Open Analysis Panel</button>
+    </section>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

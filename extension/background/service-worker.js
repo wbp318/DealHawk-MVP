@@ -1,0 +1,102 @@
+/**
+ * DealHawk Service Worker
+ * Routes messages between content scripts, popup, and side panel.
+ * All API calls are proxied through here.
+ */
+
+import {
+  decodeVin,
+  scoreListing,
+  getNegotiationBrief,
+  getPricing,
+  getIncentives,
+  healthCheck,
+} from './api-client.js';
+
+// Cache TTL: 1 hour
+const CACHE_TTL = 60 * 60 * 1000;
+
+// Open side panel when extension icon is clicked (if on a supported site)
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
+
+// Message handler - routes all inter-component communication
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  handleMessage(message, sender).then(sendResponse).catch((err) => {
+    sendResponse({ error: err.message });
+  });
+  return true; // Keep the message channel open for async response
+});
+
+async function handleMessage(message, sender) {
+  const { action, data } = message;
+
+  switch (action) {
+    case 'DECODE_VIN':
+      return handleWithCache(`vin:${data.vin}`, () => decodeVin(data.vin));
+
+    case 'SCORE_LISTING':
+      return scoreListing(data);
+
+    case 'GET_NEGOTIATION':
+      return getNegotiationBrief(data);
+
+    case 'GET_PRICING':
+      return handleWithCache(
+        `pricing:${data.year}:${data.make}:${data.model}:${data.msrp}`,
+        () => getPricing(data.year, data.make, data.model, data.msrp)
+      );
+
+    case 'GET_INCENTIVES':
+      return handleWithCache(
+        `incentives:${data.make}:${data.model || ''}`,
+        () => getIncentives(data.make, data.model)
+      );
+
+    case 'HEALTH_CHECK':
+      return healthCheck();
+
+    case 'OPEN_SIDE_PANEL':
+      if (sender.tab) {
+        await chrome.sidePanel.open({ tabId: sender.tab.id });
+      }
+      return { success: true };
+
+    case 'LISTINGS_DETECTED':
+      // Content script found listings - store count for popup
+      await chrome.storage.local.set({
+        [`listings:${sender.tab.id}`]: {
+          count: data.count,
+          scored: data.scored || 0,
+          url: sender.tab.url,
+          timestamp: Date.now(),
+        },
+      });
+      return { success: true };
+
+    case 'GET_LISTING_STATUS':
+      const tabId = data.tabId;
+      const result = await chrome.storage.local.get(`listings:${tabId}`);
+      return result[`listings:${tabId}`] || null;
+
+    default:
+      return { error: `Unknown action: ${action}` };
+  }
+}
+
+async function handleWithCache(key, fetchFn) {
+  // Check cache
+  const cached = await chrome.storage.local.get(key);
+  if (cached[key] && Date.now() - cached[key]._cachedAt < CACHE_TTL) {
+    return cached[key].data;
+  }
+
+  // Fetch fresh data
+  const data = await fetchFn();
+
+  // Cache it
+  await chrome.storage.local.set({
+    [key]: { data, _cachedAt: Date.now() },
+  });
+
+  return data;
+}

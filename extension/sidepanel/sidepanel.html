@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="sidepanel.css">
+  <title>DealHawk Analysis</title>
+</head>
+<body>
+  <div class="panel">
+    <header class="panel__header">
+      <h1 class="panel__title">DealHawk</h1>
+      <nav class="panel__tabs">
+        <button class="tab tab--active" data-tab="analysis">Analysis</button>
+        <button class="tab" data-tab="calculator">Calculator</button>
+        <button class="tab" data-tab="saved">Saved</button>
+      </nav>
+    </header>
+
+    <!-- Analysis Tab -->
+    <div class="panel__content tab-content tab-content--active" id="tab-analysis">
+      <div id="analysis-empty" class="empty-state">
+        <p>Browse a CarGurus listing to see deal analysis here.</p>
+        <p class="empty-state__hint">Click a DealHawk score badge on any listing, or navigate to a vehicle detail page.</p>
+      </div>
+      <div id="analysis-content" hidden>
+        <div class="vehicle-header" id="vehicle-header"></div>
+        <div id="score-gauge-container"></div>
+        <div id="price-breakdown-container"></div>
+        <div id="offer-targets-container"></div>
+        <div id="score-breakdown-container"></div>
+        <div id="talking-points-container"></div>
+      </div>
+    </div>
+
+    <!-- Calculator Tab -->
+    <div class="panel__content tab-content" id="tab-calculator">
+      <h2 class="section-title">Negotiation Calculator</h2>
+      <p class="section-desc">Enter the MSRP to estimate true dealer cost and offer targets.</p>
+
+      <div class="calc-form">
+        <div class="form-group">
+          <label for="calc-make">Make</label>
+          <select id="calc-make">
+            <option value="Ford">Ford</option>
+            <option value="Ram">Ram</option>
+            <option value="Chevrolet">Chevrolet</option>
+            <option value="GMC">GMC</option>
+            <option value="Toyota">Toyota</option>
+            <option value="Nissan">Nissan</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="calc-model">Model</label>
+          <input type="text" id="calc-model" placeholder="e.g. F-150, Ram 2500">
+        </div>
+        <div class="form-group">
+          <label for="calc-year">Year</label>
+          <input type="number" id="calc-year" value="2026" min="2020" max="2027">
+        </div>
+        <div class="form-group">
+          <label for="calc-msrp">MSRP ($)</label>
+          <input type="number" id="calc-msrp" placeholder="65000" step="100">
+        </div>
+        <div class="form-group">
+          <label for="calc-asking">Asking Price ($)</label>
+          <input type="number" id="calc-asking" placeholder="60000" step="100">
+        </div>
+        <div class="form-group">
+          <label for="calc-days">Days on Lot</label>
+          <input type="number" id="calc-days" placeholder="90" value="0" min="0">
+        </div>
+        <div class="form-group">
+          <label for="calc-rebates">Available Rebates ($)</label>
+          <input type="number" id="calc-rebates" placeholder="5000" value="0" step="100">
+        </div>
+        <button id="calc-btn" class="btn btn--primary">Calculate</button>
+      </div>
+
+      <div id="calc-results" hidden></div>
+    </div>
+
+    <!-- Saved Tab -->
+    <div class="panel__content tab-content" id="tab-saved">
+      <div class="empty-state">
+        <p>Saved vehicles coming in Phase 2.</p>
+        <p class="empty-state__hint">You'll be able to save and compare deals across multiple vehicles here.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="components/score-gauge.js"></script>
+  <script src="components/price-breakdown.js"></script>
+  <script src="components/offer-targets.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>

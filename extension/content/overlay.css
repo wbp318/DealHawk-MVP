@@ -1,0 +1,60 @@
+/* DealHawk Score Badge */
+
+.dealhawk-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  user-select: none;
+}
+
+.dealhawk-badge:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Score number */
+.dealhawk-badge__score {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+/* Grade label */
+.dealhawk-badge__label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.5px;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+/* Color variants */
+.dealhawk-badge--great {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border: 2px solid #22c55e;
+}
+
+.dealhawk-badge--good {
+  background: linear-gradient(135deg, #ca8a04, #a16207);
+  border: 2px solid #eab308;
+}
+
+.dealhawk-badge--poor {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  border: 2px solid #ef4444;
+}
