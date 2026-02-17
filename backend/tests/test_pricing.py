@@ -89,3 +89,77 @@ class TestInvoiceEstimation:
         """Unknown vehicle should use 92% default."""
         invoice = estimate_invoice("UnknownMake", "UnknownModel", 50000)
         assert invoice == 46000.0  # 50000 * 0.92
+
+
+class TestPricingDBCache:
+    """Test the DB cache path in get_pricing()."""
+
+    def test_cached_invoice_price(self):
+        """When DB has a cached invoice price, it should be used instead of estimation."""
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+        from sqlalchemy.pool import StaticPool
+        from backend.database.models import Base, InvoicePriceCache
+
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+        Base.metadata.create_all(bind=engine)
+        Session = sessionmaker(bind=engine)
+        db = Session()
+
+        # Seed a cached invoice price
+        db.add(InvoicePriceCache(
+            year=2026, make="Ford", model="F-150", msrp=55000,
+            invoice_price=49500, holdback_amount=1650,
+        ))
+        db.commit()
+
+        result = get_pricing(year=2026, make="Ford", model="F-150", msrp=55000, db=db)
+        assert result["invoice_price"] == 49500
+        assert result["holdback"] == 1650
+        assert result["source"] == "cached"
+        db.close()
+
+    def test_cache_overrides_estimation(self):
+        """Cached values should differ from estimated values."""
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+        from sqlalchemy.pool import StaticPool
+        from backend.database.models import Base, InvoicePriceCache
+
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+        Base.metadata.create_all(bind=engine)
+        Session = sessionmaker(bind=engine)
+        db = Session()
+
+        # Get estimated result (no cache)
+        estimated = get_pricing(year=2026, make="Ford", model="F-150", msrp=55000, db=db)
+        assert estimated["source"] == "estimated"
+
+        # Add cache entry with different values
+        db.add(InvoicePriceCache(
+            year=2026, make="Ford", model="F-150", msrp=55000,
+            invoice_price=48000, holdback_amount=1700,
+        ))
+        db.commit()
+
+        cached = get_pricing(year=2026, make="Ford", model="F-150", msrp=55000, db=db)
+        assert cached["source"] == "cached"
+        assert cached["invoice_price"] == 48000
+        assert cached["invoice_price"] != estimated["invoice_price"]
+        db.close()
+
+    def test_cache_miss_falls_back_to_estimation(self):
+        """When DB has no cache entry, should fall back to estimation."""
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+        from sqlalchemy.pool import StaticPool
+        from backend.database.models import Base
+
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+        Base.metadata.create_all(bind=engine)
+        Session = sessionmaker(bind=engine)
+        db = Session()
+
+        result = get_pricing(year=2026, make="Ford", model="F-150", msrp=55000, db=db)
+        assert result["source"] == "estimated"
+        db.close()

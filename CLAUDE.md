@@ -16,8 +16,11 @@ pip install -r backend/requirements.txt
 # Run backend (localhost:8000, Swagger at /docs)
 python -m backend.main
 
-# Run all tests (140 tests; ignore test_vin_decoder if pytest_asyncio not installed)
+# Run all tests (185 tests; ignore test_vin_decoder if pytest_asyncio not installed)
 pytest backend/tests/ --ignore=backend/tests/test_vin_decoder.py -v
+
+# Run async VIN decoder DB tests (requires pytest-asyncio)
+pytest backend/tests/test_vin_decoder_db.py -v
 
 # Run a single test file or test
 pytest backend/tests/test_deal_scorer.py -v
@@ -113,6 +116,8 @@ Market data (days supply by model) is hardcoded in `deal_scorer.MODEL_DAYS_SUPPL
 - Password hashing uses bcrypt directly (not passlib — incompatible with bcrypt >= 4.1)
 - Custom `DuplicateEmailError` exception (not ValueError) for registration conflicts
 - Dealer API tests create a `Dealership` directly in DB with a known API key hash, then pass `X-API-Key` header
+- Mock patching targets where functions are imported, not where defined: e.g., `@patch("backend.api.routes.decode_vin")` not `@patch("backend.services.vin_decoder.decode_vin")`
+- Async tests (VIN decoder DB) use `@pytest.mark.asyncio` and require `pytest-asyncio` package
 
 ## Security Conventions
 
@@ -142,5 +147,5 @@ These patterns were established during security hardening and must be maintained
 - **Phase 1 (MVP)**: Complete — CarGurus content script, backend scoring/VIN/pricing/negotiation, side panel UI
 - **Phase 2**: Complete — AutoTrader/Cars.com/Edmunds content scripts, user auth (JWT), saved vehicles, deal alerts, privacy policy, deployment prep
 - **Phase 3**: Complete — Stripe subscription billing (Free + Pro tiers), Alembic migrations, tier enforcement (saved/alerts = Pro only), subscription UI in popup + side panel, Chrome Web Store prep (CSP, store listing, privacy policy update), security-audited (0 findings). Celery/Redis deferred.
-- **Phase 4**: Complete — MarketCheck API integration (stub-first with clean swap interface), Section 179 tax calculator (free tier, IRC §280F luxury auto limits, OBBBA 100% bonus depreciation), Dealership API tier (X-API-Key auth, bulk scoring, market intel, inventory analysis, rate limiting), market context in Analysis tab, 140 tests passing, 3 audit rounds (0 findings). `create_dealer_key.py` CLI for dealer onboarding.
+- **Phase 4**: Complete — MarketCheck API integration (stub-first with clean swap interface), Section 179 tax calculator (free tier, IRC §280F luxury auto limits, OBBBA 100% bonus depreciation), Dealership API tier (X-API-Key auth, bulk scoring, market intel, inventory analysis, rate limiting), market context in Analysis tab, 185 tests passing (14 test files), 3 audit rounds (0 findings). `create_dealer_key.py` CLI for dealer onboarding.
 - **Phase 5**: Celery background tasks, PostgreSQL migration, live MarketCheck API integration, dealer dashboard

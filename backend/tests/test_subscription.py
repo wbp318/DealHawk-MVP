@@ -495,3 +495,45 @@ class TestMeEndpoint:
         resp = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
         assert resp.status_code == 200
         assert resp.json()["subscription_tier"] == "pro"
+
+
+class TestCanceledProAccess:
+
+    def test_canceled_pro_blocked_from_saved(self, client, _db_session):
+        """A Pro user whose subscription was canceled should be blocked from Pro features."""
+        token = _register(client, email="canceled@example.com")
+        db = _db_session()
+        user = db.query(User).filter(User.email == "canceled@example.com").first()
+        user.subscription_tier = "pro"
+        user.subscription_status = "canceled"
+        user.stripe_customer_id = "cus_canceled"
+        db.commit()
+        db.close()
+
+        resp = client.get("/api/v1/saved/", headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 403
+
+    def test_past_due_allowed_saved_access(self, client, _db_session):
+        """A past_due Pro user should still have access to Pro features (grace period)."""
+        token = _register(client, email="pastdue@example.com")
+        _set_past_due(_db_session, "pastdue@example.com")
+        resp = client.get("/api/v1/saved/", headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 200
+
+    @patch("backend.services.stripe_service._get_stripe")
+    def test_webhook_signature_verification_error(self, mock_get_stripe, client):
+        """Invalid webhook signature should return 400."""
+        import stripe as stripe_module
+        mock_stripe = MagicMock()
+        mock_get_stripe.return_value = mock_stripe
+        mock_stripe.Webhook.construct_event.side_effect = stripe_module.SignatureVerificationError(
+            "Invalid signature", sig_header="t=bad,v1=invalid"
+        )
+
+        resp = client.post(
+            "/webhooks/stripe",
+            content=b'{"type": "checkout.session.completed"}',
+            headers={"Stripe-Signature": "t=bad,v1=invalid"},
+        )
+        assert resp.status_code == 400
+        assert "Signature verification" in resp.json()["detail"]

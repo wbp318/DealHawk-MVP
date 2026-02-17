@@ -392,6 +392,76 @@ class TestConsumerEndpointsUnaffected:
         assert "score" in resp.json()
 
 
+class TestRateLimitReset:
+
+    def test_daily_counter_reset_on_new_day(self, test_session):
+        """Daily counter should reset when a new day arrives."""
+        from datetime import date, timedelta
+
+        db = test_session()
+        yesterday = date.today() - timedelta(days=1)
+        dealer = Dealership(
+            name="Reset Daily Dealer",
+            email="daily_reset@dealer.com",
+            api_key_hash=_hash_api_key("dh_dealer_daily_reset"),
+            is_active=True,
+            daily_rate_limit=5,
+            monthly_rate_limit=25000,
+            requests_today=4,  # Near limit from yesterday
+            requests_this_month=10,
+            last_request_date=yesterday,
+            last_request_month=yesterday.strftime("%Y-%m"),
+        )
+        db.add(dealer)
+        db.commit()
+        db.close()
+
+        with patch("backend.database.db.SessionLocal", test_session):
+            from backend.api.app import create_app
+            app = create_app()
+            client = TestClient(app)
+
+            # Should succeed because it's a new day — counter resets
+            resp = client.post(
+                "/api/v1/dealer/score/bulk",
+                json={"vehicles": [{"asking_price": 50000, "msrp": 60000, "make": "Ford", "model": "F-150", "year": 2026}]},
+                headers={"X-API-Key": "dh_dealer_daily_reset"},
+            )
+            assert resp.status_code == 200
+
+    def test_monthly_counter_reset_on_new_month(self, test_session):
+        """Monthly counter should reset when a new month arrives."""
+        db = test_session()
+        dealer = Dealership(
+            name="Reset Monthly Dealer",
+            email="monthly_reset@dealer.com",
+            api_key_hash=_hash_api_key("dh_dealer_monthly_reset"),
+            is_active=True,
+            daily_rate_limit=1000,
+            monthly_rate_limit=5,
+            requests_today=0,
+            requests_this_month=4,  # Near limit from last month
+            last_request_date=date(2025, 12, 15),
+            last_request_month="2025-12",
+        )
+        db.add(dealer)
+        db.commit()
+        db.close()
+
+        with patch("backend.database.db.SessionLocal", test_session):
+            from backend.api.app import create_app
+            app = create_app()
+            client = TestClient(app)
+
+            # Should succeed because it's a new month — counter resets
+            resp = client.post(
+                "/api/v1/dealer/score/bulk",
+                json={"vehicles": [{"asking_price": 50000, "msrp": 60000, "make": "Ford", "model": "F-150", "year": 2026}]},
+                headers={"X-API-Key": "dh_dealer_monthly_reset"},
+            )
+            assert resp.status_code == 200
+
+
 class TestProductionValidation:
 
     def test_validate_production_dealer_salt(self):

@@ -194,3 +194,86 @@ class TestAlertMatching:
         }, headers=auth_headers)
         assert resp.status_code == 200
         assert resp.json()["count"] == 0
+
+    def test_days_on_lot_min_filter(self, client, auth_headers):
+        """Alert with days_on_lot_min should filter listings below that threshold."""
+        alert_data = {
+            "name": "Aged inventory only",
+            "make": "Ram",
+            "days_on_lot_min": 90,
+        }
+        client.post("/api/v1/alerts/", json=alert_data, headers=auth_headers)
+
+        # 30 days should NOT match
+        resp = client.post("/api/v1/alerts/check", json={
+            "make": "Ram",
+            "model": "Ram 2500",
+            "year": 2025,
+            "asking_price": 55000,
+            "deal_score": 85,
+            "days_on_lot": 30,
+        }, headers=auth_headers)
+        assert resp.json()["count"] == 0
+
+        # 120 days SHOULD match
+        resp = client.post("/api/v1/alerts/check", json={
+            "make": "Ram",
+            "model": "Ram 2500",
+            "year": 2025,
+            "asking_price": 55000,
+            "deal_score": 85,
+            "days_on_lot": 120,
+        }, headers=auth_headers)
+        assert resp.json()["count"] == 1
+
+    def test_model_substring_match(self, client, auth_headers):
+        """Alert model uses substring matching (e.g., 'Ram 2500' matches 'Ram 2500 Laramie')."""
+        alert_data = {
+            "name": "Ram 2500 deals",
+            "make": "Ram",
+            "model": "Ram 2500",
+        }
+        client.post("/api/v1/alerts/", json=alert_data, headers=auth_headers)
+
+        # Listing model "Ram 2500 Laramie" contains alert model "Ram 2500" — should match
+        resp = client.post("/api/v1/alerts/check", json={
+            "make": "Ram",
+            "model": "Ram 2500 Laramie",
+            "year": 2025,
+            "asking_price": 55000,
+            "deal_score": 75,
+        }, headers=auth_headers)
+        assert resp.json()["count"] == 1
+
+    def test_year_range_boundary(self, client, auth_headers):
+        """Year exactly at min/max boundary should match; outside should not."""
+        # SAMPLE_ALERT has year_min=2024, year_max=2026
+        client.post("/api/v1/alerts/", json=SAMPLE_ALERT, headers=auth_headers)
+
+        # 2024 (at min) should match
+        resp = client.post("/api/v1/alerts/check", json={
+            "make": "Ram", "model": "Ram 2500", "year": 2024,
+            "asking_price": 55000, "deal_score": 85,
+        }, headers=auth_headers)
+        assert resp.json()["count"] == 1
+
+        # 2023 (below min) should NOT match
+        resp = client.post("/api/v1/alerts/check", json={
+            "make": "Ram", "model": "Ram 2500", "year": 2023,
+            "asking_price": 55000, "deal_score": 85,
+        }, headers=auth_headers)
+        assert resp.json()["count"] == 0
+
+    def test_missing_listing_data_does_not_match(self, client, auth_headers):
+        """When alert sets a criterion but listing lacks that data, should NOT match."""
+        client.post("/api/v1/alerts/", json=SAMPLE_ALERT, headers=auth_headers)
+
+        # Listing with no year — SAMPLE_ALERT has year_min=2024
+        resp = client.post("/api/v1/alerts/check", json={
+            "make": "Ram",
+            "model": "Ram 2500",
+            "asking_price": 55000,
+            "deal_score": 85,
+        }, headers=auth_headers)
+        # year is missing (None) so year_min check fails → no match
+        assert resp.json()["count"] == 0

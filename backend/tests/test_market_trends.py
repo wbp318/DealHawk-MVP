@@ -177,3 +177,57 @@ class TestMarketEndpoints:
         resp = client.get("/api/v1/market/trends/Ram/Ram%202500")
         assert resp.status_code == 200
         assert resp.json()["model"] == "Ram 2500"
+
+
+class TestMarketErrorHandling:
+
+    @patch("backend.api.market_routes.get_market_trends")
+    def test_trends_502_on_exception(self, mock_trends, client):
+        """Market trends endpoint should return 502 on service exception."""
+        mock_trends.side_effect = RuntimeError("DB connection lost")
+        resp = client.get("/api/v1/market/trends/Ford/F-150")
+        assert resp.status_code == 502
+        assert "temporarily unavailable" in resp.json()["detail"].lower()
+        # Should NOT expose the raw error
+        assert "DB connection" not in resp.json()["detail"]
+
+    @patch("backend.api.market_routes.get_market_stats")
+    def test_stats_502_on_exception(self, mock_stats, client):
+        """Market stats endpoint should return 502 on service exception."""
+        mock_stats.side_effect = RuntimeError("Timeout")
+        resp = client.get("/api/v1/market/stats/Ford/F-150")
+        assert resp.status_code == 502
+        assert "temporarily unavailable" in resp.json()["detail"].lower()
+
+
+class TestMarketCacheUpdate:
+
+    def test_cache_update_existing_entry(self, test_session):
+        """Storing cache for a key that already exists should update, not duplicate."""
+        from backend.services.marketcheck_service import get_market_trends
+        from backend.database.models import MarketDataCache
+        from datetime import datetime, timedelta
+
+        db = test_session()
+
+        # First call creates cache entry
+        get_market_trends("Ram", "Ram 2500", db)
+        count1 = db.query(MarketDataCache).filter(
+            MarketDataCache.cache_key == "trends:Ram:Ram 2500"
+        ).count()
+        assert count1 == 1
+
+        # Expire the existing cache to force re-fetch
+        entry = db.query(MarketDataCache).filter(
+            MarketDataCache.cache_key == "trends:Ram:Ram 2500"
+        ).first()
+        entry.expires_at = datetime.utcnow() - timedelta(hours=1)
+        db.commit()
+
+        # Second call should update the existing entry, not create a new one
+        get_market_trends("Ram", "Ram 2500", db)
+        count2 = db.query(MarketDataCache).filter(
+            MarketDataCache.cache_key == "trends:Ram:Ram 2500"
+        ).count()
+        assert count2 == 1  # Still just one entry, not two
+        db.close()

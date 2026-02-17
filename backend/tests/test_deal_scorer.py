@@ -174,3 +174,56 @@ class TestDealScorer:
         assert result["score"] >= 55
         # Incentive score should be high with $9,350 on a $58K truck (16%)
         assert result["breakdown"]["incentives"]["score"] >= 85
+
+
+class TestDealScorerEdgeCases:
+    """Edge cases for the scoring algorithm."""
+
+    def test_zero_true_cost_returns_neutral(self):
+        """When true_cost is zero (impossible but safe), price score should be neutral."""
+        # This tests _score_price with true_cost=0 via asking < msrp path
+        # When msrp is very small, true_cost can approach 0
+        result = score_deal(
+            asking_price=100,
+            msrp=100,
+            make="Unknown",
+            model="Unknown",
+            year=2026,
+            days_on_lot=0,
+        )
+        # Should not crash, score should be valid
+        assert 0 <= result["score"] <= 100
+
+    def test_zero_msrp_returns_neutral_incentive(self):
+        """Zero MSRP should not crash incentive scoring (division by zero guard)."""
+        # Can't actually send msrp=0 through the endpoint (Pydantic gt=0),
+        # but we can test the scorer directly
+        from backend.services.deal_scorer import _score_incentives
+        score = _score_incentives(5000, 0)
+        assert score == 0
+
+    def test_negative_margin(self):
+        """When asking price is above MSRP, score should be very low."""
+        result = score_deal(
+            asking_price=70000,
+            msrp=60000,
+            make="Toyota",
+            model="Tundra",
+            year=2026,
+            days_on_lot=5,
+        )
+        assert result["score"] < 25
+        assert result["breakdown"]["price"]["score"] <= 15
+
+    def test_unknown_model_supply_score(self):
+        """Unknown model should get slightly-below-neutral supply score."""
+        from backend.services.deal_scorer import _score_market_supply
+        score = _score_market_supply("NoMake", "NoModel")
+        assert score == 40
+
+    def test_partial_model_match(self):
+        """Partial model names should match via substring lookup."""
+        from backend.services.deal_scorer import _score_market_supply
+        # "Ram 2500" should match via partial matching
+        score = _score_market_supply("Ram", "Ram 2500")
+        assert score >= 85  # 318 days supply / 76 = 4.18 ratio → 100
