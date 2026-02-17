@@ -1,0 +1,30 @@
+# DealHawk-MVP Language Detection
+# Ensure GitHub linguist detects all languages used in this project.
+
+# --- Source Code ---
+*.py    linguist-detectable  linguist-language=Python
+*.js    linguist-detectable  linguist-language=JavaScript
+*.html  linguist-detectable  linguist-language=HTML
+*.css   linguist-detectable  linguist-language=CSS
+*.json  linguist-detectable  linguist-language=JSON
+
+# --- Documentation ---
+*.md    linguist-detectable  linguist-language=Markdown
+*.txt   linguist-documentation=false
+
+# --- Binary / Generated ---
+*.png   binary
+*.db    binary linguist-generated
+
+# --- Config ---
+.gitignore    export-ignore
+.env.example  export-ignore
+
+# --- Line Endings ---
+*.py    text eol=lf
+*.js    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
