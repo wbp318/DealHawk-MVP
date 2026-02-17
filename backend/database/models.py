@@ -227,6 +227,7 @@ class Dealership(Base):
     name: Mapped[str] = mapped_column(String(200))
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     api_key_hash: Mapped[str] = mapped_column(String(255), unique=True)
+    hashed_password: Mapped[str | None] = mapped_column(String(255))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     tier: Mapped[str] = mapped_column(String(50), default="standard")
     daily_rate_limit: Mapped[int] = mapped_column(Integer, default=1000)

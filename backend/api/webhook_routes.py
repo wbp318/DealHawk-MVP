@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from backend.config.settings import get_settings
 from backend.database.db import get_db
 from backend.database.models import ProcessedWebhookEvent
 from backend.services.stripe_service import (
@@ -20,6 +21,20 @@ from backend.services.stripe_service import (
 logger = logging.getLogger(__name__)
 
 webhook_router = APIRouter(prefix="/webhooks", tags=["webhooks"])
+
+
+def _process_event_sync(event_type: str, event_data: dict, event_id: str, db: Session):
+    """Process webhook event synchronously (local dev without Redis)."""
+    if event_type == "checkout.session.completed":
+        process_checkout_completed(event_data, db)
+    elif event_type == "customer.subscription.updated":
+        process_subscription_updated(event_data, db)
+    elif event_type == "customer.subscription.deleted":
+        process_subscription_deleted(event_data, db)
+    elif event_type == "invoice.payment_failed":
+        process_invoice_payment_failed(event_data, db)
+    else:
+        logger.info("Unhandled webhook event type: %s (id: %s)", event_type, event_id)
 
 
 @webhook_router.post("/stripe")
@@ -52,16 +67,14 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
 
     event_data = event.get("data", {}).get("object", {})
 
-    if event_type == "checkout.session.completed":
-        process_checkout_completed(event_data, db)
-    elif event_type == "customer.subscription.updated":
-        process_subscription_updated(event_data, db)
-    elif event_type == "customer.subscription.deleted":
-        process_subscription_deleted(event_data, db)
-    elif event_type == "invoice.payment_failed":
-        process_invoice_payment_failed(event_data, db)
+    # Dispatch to Celery if Redis is configured, else process synchronously
+    settings = get_settings()
+    if settings.redis_url:
+        from backend.tasks.webhook_tasks import process_webhook_event
+        process_webhook_event.delay(event_id, event_type, event_data)
+        logger.info("Webhook event %s (%s) queued to Celery", event_id, event_type)
     else:
-        logger.info("Unhandled webhook event type: %s (id: %s)", event_type, event_id)
+        _process_event_sync(event_type, event_data, event_id, db)
 
     # Record event as processed (IntegrityError = concurrent duplicate, safe to ignore)
     if event_id:

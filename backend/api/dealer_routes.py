@@ -1,6 +1,7 @@
 """Dealer API tier endpoints — API key auth, bulk scoring, market intel, inventory analysis."""
 
 import logging
+import re
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, Field
@@ -9,12 +10,15 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger(__name__)
 
 from backend.api.dealer_auth import get_dealership_required
+from backend.config.settings import get_settings
 from backend.database.db import get_db
 from backend.database.models import Dealership, IncentiveProgram
 from backend.services.deal_scorer import score_deal, CARRYING_COST_PER_DAY
 from backend.services.marketcheck_service import get_market_trends
 
 dealer_router = APIRouter(prefix="/dealer", tags=["dealer"])
+
+VIN_PATTERN = re.compile(r"^[A-HJ-NPR-Z0-9]{17}$")
 
 
 # --- Request models ---
@@ -48,6 +52,10 @@ class InventoryVehicle(BaseModel):
 
 class InventoryAnalysisRequest(BaseModel):
     vehicles: list[InventoryVehicle] = Field(..., min_length=1, max_length=100)
+
+
+class BatchVinRequest(BaseModel):
+    vins: list[str] = Field(..., min_length=1, max_length=100)
 
 
 # --- Endpoints ---
@@ -183,3 +191,63 @@ def inventory_analysis(
         },
         "vehicles": vehicles_out,
     }
+
+
+@dealer_router.post("/vin/batch")
+def batch_vin_decode(
+    req: BatchVinRequest,
+    dealer: Dealership = Depends(get_dealership_required),
+    db: Session = Depends(get_db),
+):
+    """Submit VINs for background decoding. Returns task_id if Celery is available."""
+    # Validate VIN format
+    for vin in req.vins:
+        if not VIN_PATTERN.match(vin):
+            raise HTTPException(status_code=400, detail=f"Invalid VIN format: {vin}")
+
+    settings = get_settings()
+    if settings.redis_url:
+        from backend.tasks.vin_tasks import decode_vin_batch
+        result = decode_vin_batch.delay(req.vins, dealer.id)
+        return {"task_id": result.id, "status": "queued", "vin_count": len(req.vins)}
+    else:
+        # Synchronous fallback for local dev without Redis
+        import asyncio
+        from backend.services.vin_decoder import decode_vin
+
+        decoded = 0
+        failed = 0
+        errors = []
+        for vin in req.vins:
+            try:
+                asyncio.run(decode_vin(vin, db=db))
+                decoded += 1
+            except Exception as exc:
+                failed += 1
+                errors.append({"vin": vin, "error": str(exc)})
+
+        return {
+            "status": "completed",
+            "result": {"decoded": decoded, "failed": failed, "errors": errors},
+        }
+
+
+@dealer_router.get("/tasks/{task_id}")
+def get_task_status(
+    task_id: str = Path(..., min_length=1, max_length=255),
+    dealer: Dealership = Depends(get_dealership_required),
+):
+    """Poll status of an async task (e.g., batch VIN decode)."""
+    settings = get_settings()
+    if not settings.redis_url:
+        raise HTTPException(status_code=404, detail="Async tasks not available without Redis")
+
+    from backend.celery_app import app as celery_app
+    result = celery_app.AsyncResult(task_id)
+    response = {
+        "task_id": task_id,
+        "status": result.status,
+    }
+    if result.ready():
+        response["result"] = result.result
+    return response

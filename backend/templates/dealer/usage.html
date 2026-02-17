@@ -1,0 +1,40 @@
+{% extends "dealer/base.html" %}
+{% set active = "usage" %}
+
+{% block title %}API Usage - DealHawk{% endblock %}
+
+{% block content %}
+<h1>API Usage</h1>
+
+<div hx-get="/dashboard/partials/usage" hx-trigger="load" hx-swap="innerHTML" id="usage-stats">
+    <p>Loading usage data...</p>
+</div>
+
+<h2>Account Details</h2>
+<div class="detail-table">
+    <div class="detail-row">
+        <span class="detail-label">Dealership</span>
+        <span class="detail-value">{{ dealer.name }}</span>
+    </div>
+    <div class="detail-row">
+        <span class="detail-label">Email</span>
+        <span class="detail-value">{{ dealer.email }}</span>
+    </div>
+    <div class="detail-row">
+        <span class="detail-label">Tier</span>
+        <span class="detail-value tier-badge tier-{{ dealer.tier }}">{{ dealer.tier|capitalize }}</span>
+    </div>
+    <div class="detail-row">
+        <span class="detail-label">Daily Limit</span>
+        <span class="detail-value">{{ dealer.daily_rate_limit }}</span>
+    </div>
+    <div class="detail-row">
+        <span class="detail-label">Monthly Limit</span>
+        <span class="detail-value">{{ dealer.monthly_rate_limit }}</span>
+    </div>
+    <div class="detail-row">
+        <span class="detail-label">Account Created</span>
+        <span class="detail-value">{{ dealer.created_at.strftime('%Y-%m-%d') if dealer.created_at else 'N/A' }}</span>
+    </div>
+</div>
+{% endblock %}

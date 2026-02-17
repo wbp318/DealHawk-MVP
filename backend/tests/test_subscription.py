@@ -461,7 +461,8 @@ class TestProductionValidation:
         s = Settings(environment="production", jwt_secret_key="real-secret-here",
                      stripe_secret_key="sk_test", stripe_webhook_secret="whsec_test",
                      stripe_pro_price_id="price_test", base_url="https://api.example.com",
-                     dealer_api_key_salt="production-salt-value")
+                     dealer_api_key_salt="production-salt-value",
+                     redis_url="redis://localhost:6379/0")
         s.validate_production()  # Should not raise
 
 

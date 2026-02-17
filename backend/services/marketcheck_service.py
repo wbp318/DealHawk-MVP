@@ -3,12 +3,23 @@ MarketCheck service — market trends and stats with DB caching.
 
 Uses stub data from existing MODEL_DAYS_SUPPLY and seeded incentives when
 no MarketCheck API key is configured. Clean interface to swap in live API.
+
+Live API path includes: retry with exponential backoff, circuit breaker,
+explicit timeouts, and graceful fallback to stubs on failure.
 """
 
 import json
+import logging
+import time
 from datetime import datetime, timedelta
 
 import httpx
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type,
+)
 from sqlalchemy.orm import Session
 
 from backend.config.settings import get_settings
@@ -16,6 +27,57 @@ from backend.config.invoice_ranges import INVOICE_RATIOS, DEFAULT_INVOICE_RATIO,
 from backend.database.models import MarketDataCache, IncentiveProgram
 from backend.services.deal_scorer import MODEL_DAYS_SUPPLY, INDUSTRY_AVG_DAYS_SUPPLY
 
+logger = logging.getLogger(__name__)
+
+
+# --- Circuit breaker state ---
+
+_circuit_failure_count = 0
+_circuit_opened_at: float | None = None
+_CIRCUIT_FAILURE_THRESHOLD = 5
+_CIRCUIT_RESET_TIMEOUT = 300  # 5 minutes
+
+
+class MarketCheckUnavailableError(Exception):
+    """Raised when circuit breaker is open."""
+    pass
+
+
+def _check_circuit():
+    """Raise if circuit breaker is open (not yet timed out)."""
+    global _circuit_opened_at
+    if _circuit_opened_at is not None:
+        elapsed = time.time() - _circuit_opened_at
+        if elapsed < _CIRCUIT_RESET_TIMEOUT:
+            raise MarketCheckUnavailableError("Circuit breaker open — MarketCheck API unavailable")
+        # Timeout elapsed, allow a probe request (half-open)
+        _circuit_opened_at = None
+
+
+def _record_success():
+    """Reset circuit breaker on success."""
+    global _circuit_failure_count, _circuit_opened_at
+    _circuit_failure_count = 0
+    _circuit_opened_at = None
+
+
+def _record_failure():
+    """Increment failure count, open circuit if threshold reached."""
+    global _circuit_failure_count, _circuit_opened_at
+    _circuit_failure_count += 1
+    if _circuit_failure_count >= _CIRCUIT_FAILURE_THRESHOLD:
+        _circuit_opened_at = time.time()
+        logger.warning("Circuit breaker OPENED after %d consecutive failures", _circuit_failure_count)
+
+
+def reset_circuit_breaker():
+    """Reset circuit breaker state (for testing)."""
+    global _circuit_failure_count, _circuit_opened_at
+    _circuit_failure_count = 0
+    _circuit_opened_at = None
+
+
+# --- Public API ---
 
 def get_market_trends(make: str, model: str, db: Session) -> dict:
     """Get market trend data for a make/model. Uses cache, then stub or live API."""
@@ -26,7 +88,7 @@ def get_market_trends(make: str, model: str, db: Session) -> dict:
 
     settings = get_settings()
     if settings.marketcheck_api_key:
-        data = _fetch_trends_from_api(make, model, settings)
+        data = _fetch_trends_live(make, model, settings, db)
     else:
         data = _stub_trends(make, model, db)
 
@@ -43,7 +105,7 @@ def get_market_stats(make: str, model: str, db: Session) -> dict:
 
     settings = get_settings()
     if settings.marketcheck_api_key:
-        data = _fetch_stats_from_api(make, model, settings)
+        data = _fetch_stats_live(make, model, settings, db)
     else:
         data = _stub_stats(make, model)
 
@@ -186,13 +248,21 @@ def _stub_stats(make: str, model: str) -> dict:
     }
 
 
-# --- Real API implementations ---
+# --- Real API with retry + circuit breaker ---
 
+_TIMEOUT = httpx.Timeout(10.0, connect=5.0)
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=1, max=10),
+    retry=retry_if_exception_type((httpx.TimeoutException, httpx.HTTPStatusError)),
+)
 def _fetch_trends_from_api(make: str, model: str, settings) -> dict:
-    """Fetch trends from MarketCheck API."""
+    """Fetch trends from MarketCheck API with retries."""
     url = f"{settings.marketcheck_base_url}/trends/{make}/{model}"
     headers = {"Authorization": settings.marketcheck_api_key}
-    resp = httpx.get(url, headers=headers, timeout=15)
+    resp = httpx.get(url, headers=headers, timeout=_TIMEOUT)
     resp.raise_for_status()
     raw = resp.json()
 
@@ -212,11 +282,16 @@ def _fetch_trends_from_api(make: str, model: str, settings) -> dict:
     }
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=1, max=10),
+    retry=retry_if_exception_type((httpx.TimeoutException, httpx.HTTPStatusError)),
+)
 def _fetch_stats_from_api(make: str, model: str, settings) -> dict:
-    """Fetch market stats from MarketCheck API."""
+    """Fetch market stats from MarketCheck API with retries."""
     url = f"{settings.marketcheck_base_url}/stats/{make}/{model}"
     headers = {"Authorization": settings.marketcheck_api_key}
-    resp = httpx.get(url, headers=headers, timeout=15)
+    resp = httpx.get(url, headers=headers, timeout=_TIMEOUT)
     resp.raise_for_status()
     raw = resp.json()
 
@@ -231,3 +306,35 @@ def _fetch_stats_from_api(make: str, model: str, settings) -> dict:
         "source": "marketcheck",
         "as_of": datetime.utcnow().strftime("%Y-%m-%d"),
     }
+
+
+def _fetch_trends_live(make: str, model: str, settings, db: Session) -> dict:
+    """Fetch trends with circuit breaker. Falls back to stub on failure."""
+    try:
+        _check_circuit()
+        data = _fetch_trends_from_api(make, model, settings)
+        _record_success()
+        return data
+    except MarketCheckUnavailableError:
+        logger.warning("Circuit open — using stub trends for %s %s", make, model)
+        return _stub_trends(make, model, db)
+    except Exception:
+        _record_failure()
+        logger.warning("MarketCheck trends API failed for %s %s — falling back to stub", make, model)
+        return _stub_trends(make, model, db)
+
+
+def _fetch_stats_live(make: str, model: str, settings, db: Session) -> dict:
+    """Fetch stats with circuit breaker. Falls back to stub on failure."""
+    try:
+        _check_circuit()
+        data = _fetch_stats_from_api(make, model, settings)
+        _record_success()
+        return data
+    except MarketCheckUnavailableError:
+        logger.warning("Circuit open — using stub stats for %s %s", make, model)
+        return _stub_stats(make, model)
+    except Exception:
+        _record_failure()
+        logger.warning("MarketCheck stats API failed for %s %s — falling back to stub", make, model)
+        return _stub_stats(make, model)

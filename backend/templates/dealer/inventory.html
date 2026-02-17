@@ -1,0 +1,20 @@
+{% extends "dealer/base.html" %}
+{% set active = "inventory" %}
+
+{% block title %}Inventory Analysis - DealHawk{% endblock %}
+
+{% block content %}
+<h1>Inventory Analysis</h1>
+<p>Enter VINs (one per line) to analyze your inventory.</p>
+
+<form hx-post="/dashboard/partials/inventory-results" hx-target="#results" hx-swap="innerHTML">
+    <div class="form-group">
+        <label for="vins_text">VINs (one per line, max 100)</label>
+        <textarea id="vins_text" name="vins_text" rows="8" class="form-textarea"
+                  placeholder="1C6SRFFT8PN123456&#10;3C63RRGL5PG654321&#10;1FTFW1E80PFA12345"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Analyze Inventory</button>
+</form>
+
+<div id="results" class="results-container"></div>
+{% endblock %}

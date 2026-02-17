@@ -4,8 +4,10 @@ CLI tool to create a dealership API key.
 Usage:
     python -m backend.create_dealer_key --name "Test Dealer" --email "dealer@test.com"
     python -m backend.create_dealer_key --name "Premium Dealer" --email "premium@dealer.com" --tier premium --daily-limit 5000
+    python -m backend.create_dealer_key --name "Dashboard Dealer" --email "d@test.com" --password "mypassword"
 
 Generates a raw API key (printed once), hashes it, and stores in the database.
+Optionally sets a password for dealer dashboard login.
 """
 
 import argparse
@@ -14,9 +16,17 @@ import secrets
 from backend.database.db import init_db, SessionLocal
 from backend.database.models import Dealership
 from backend.api.dealer_auth import _hash_api_key
+from backend.services.auth_service import hash_password
 
 
-def create_key(name: str, email: str, tier: str = "standard", daily_limit: int = 1000, monthly_limit: int = 25000):
+def create_key(
+    name: str,
+    email: str,
+    tier: str = "standard",
+    daily_limit: int = 1000,
+    monthly_limit: int = 25000,
+    password: str | None = None,
+):
     init_db()
     db = SessionLocal()
 
@@ -37,6 +47,10 @@ def create_key(name: str, email: str, tier: str = "standard", daily_limit: int =
             daily_rate_limit=daily_limit,
             monthly_rate_limit=monthly_limit,
         )
+
+        if password:
+            dealer.hashed_password = hash_password(password)
+
         db.add(dealer)
         db.commit()
         db.refresh(dealer)
@@ -48,6 +62,8 @@ def create_key(name: str, email: str, tier: str = "standard", daily_limit: int =
         print(f"  Tier:  {dealer.tier}")
         print(f"  Daily limit:   {dealer.daily_rate_limit}")
         print(f"  Monthly limit: {dealer.monthly_rate_limit}")
+        if password:
+            print(f"  Dashboard password: set")
         print()
         print(f"  API Key: {raw_key}")
         print()
@@ -63,9 +79,10 @@ def main():
     parser.add_argument("--tier", default="standard", choices=["standard", "premium"])
     parser.add_argument("--daily-limit", type=int, default=1000)
     parser.add_argument("--monthly-limit", type=int, default=25000)
+    parser.add_argument("--password", default=None, help="Dashboard login password")
 
     args = parser.parse_args()
-    create_key(args.name, args.email, args.tier, args.daily_limit, args.monthly_limit)
+    create_key(args.name, args.email, args.tier, args.daily_limit, args.monthly_limit, args.password)
 
 
 if __name__ == "__main__":

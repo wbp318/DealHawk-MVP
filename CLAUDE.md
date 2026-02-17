@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-DealHawk is a Chrome extension + Python backend that scores vehicle deals on dealer websites. It detects aged inventory, calculates true dealer cost, and generates negotiation targets. Supports CarGurus, AutoTrader, Cars.com, and Edmunds. Has user accounts with JWT auth, saved vehicles, deal alerts, and Stripe subscription billing (Free + Pro tiers).
+DealHawk is a Chrome extension + Python backend that scores vehicle deals on dealer websites. It detects aged inventory, calculates true dealer cost, and generates negotiation targets. Supports CarGurus, AutoTrader, Cars.com, and Edmunds. Has user accounts with JWT auth, saved vehicles, deal alerts, Stripe subscription billing (Free + Pro tiers), Celery background tasks, and a dealer dashboard.
 
 ## Commands
 
@@ -16,7 +16,7 @@ pip install -r backend/requirements.txt
 # Run backend (localhost:8000, Swagger at /docs)
 python -m backend.main
 
-# Run all tests (185 tests; ignore test_vin_decoder if pytest_asyncio not installed)
+# Run all tests (222 tests; ignore test_vin_decoder if pytest_asyncio not installed)
 pytest backend/tests/ --ignore=backend/tests/test_vin_decoder.py -v
 
 # Run async VIN decoder DB tests (requires pytest-asyncio)
@@ -36,6 +36,15 @@ python -m backend.seed_data
 
 # Create a dealer API key (for Dealer tier endpoints)
 python -m backend.create_dealer_key --name "Dealer Name" --email "dealer@example.com"
+python -m backend.create_dealer_key --name "Dashboard Dealer" --email "d@test.com" --password "pass123"
+
+# Docker (production)
+docker compose up --build           # Start all 5 services (app, db, redis, celery-worker, celery-beat)
+docker compose down                 # Stop all services
+
+# Celery (local dev with Redis running)
+celery -A backend.celery_app worker --loglevel=info   # Start worker
+celery -A backend.celery_app beat --loglevel=info      # Start beat scheduler
 
 # Load extension: Chrome → chrome://extensions → Developer mode → Load unpacked → select extension/
 ```
@@ -46,20 +55,25 @@ python -m backend.create_dealer_key --name "Dealer Name" --email "dealer@example
 
 ```
 Chrome Extension (Manifest V3)  →  Python Backend (FastAPI)
-  4 content scripts (DOM scraping)     services (scoring, VIN, pricing, auth, stripe, market, tax)
-  service worker (message router)      SQLite database (10 tables)
+  4 content scripts (DOM scraping)     services (scoring, VIN, pricing, auth, stripe, market, tax, email)
+  service worker (message router)      SQLite dev / PostgreSQL prod (10 tables)
   popup + side panel (UI)              JWT auth + Stripe billing + Dealer API key auth
-                                       Alembic migrations (4 revisions)
+                                       Celery + Redis (background tasks, beat scheduler)
+                                       Alembic migrations (5 revisions)
+                                       Dealer dashboard (Jinja2 + HTMX)
 ```
 
 ### Backend (`backend/`)
 
 Layered: **API → Services → Database/Config**
 
-- **API**: Eight route files — six under `/api/v1/`: `routes.py` (scoring, VIN, pricing, incentives, negotiation, Section 179 calculator), `auth_routes.py` (register, login, refresh, me), `saved_routes.py` (CRUD saved vehicles — Pro only), `alert_routes.py` (CRUD deal alerts — Pro only), `market_routes.py` (market trends + stats — free tier), `dealer_routes.py` (bulk scoring, market intel, inventory analysis — API key auth). Two at root: `subscription_routes.py` (checkout, portal, status, success/cancel pages), `webhook_routes.py` (Stripe webhook). Auth dependencies in `auth.py` provide `get_current_user_required`, `get_current_user_optional`, and `get_pro_user_required`. Dealer auth in `dealer_auth.py` provides `get_dealership_required` (X-API-Key header + rate limiting).
-- **Services** (`services/`): Stateless functions. `deal_scorer.py` is the core — 5-factor weighted scoring. `auth_service.py` handles bcrypt hashing, JWT creation/verification, user registration. `stripe_service.py` handles Stripe customer creation, checkout sessions, portal sessions, and webhook event processing. `alert_service.py` matches listings against user alerts. `vin_decoder.py` calls NHTSA. `pricing_service.py` checks DB cache, falls back to ratio estimates. `negotiation_service.py` generates offers and talking points. `marketcheck_service.py` provides market trends/stats with DB caching (stub data or live MarketCheck API). `section179_service.py` calculates tax deductions for business vehicles.
-- **Database** (`database/`): SQLAlchemy 2.0 mapped classes. SQLite for dev (Postgres ready via `DATABASE_URL`). Ten tables: `users` (with subscription fields), `vehicles` (VIN-keyed), `listing_sightings`, `invoice_price_cache`, `incentive_programs`, `saved_vehicles` (FK → users), `deal_alerts` (FK → users), `processed_webhook_events` (Stripe idempotency), `market_data_cache` (cached MarketCheck responses with TTL), `dealerships` (API tier accounts with rate limiting). Alembic manages migrations (`alembic/versions/`).
-- **Config** (`config/`): `settings.py` uses pydantic-settings with `.env`. Includes JWT settings, Stripe keys, MarketCheck API key, dealer API key salt, and `environment` (development/production). `validate_production()` blocks startup if JWT secret, Stripe keys, or dealer salt are default in production. `holdback_rates.py`, `invoice_ranges.py`, and `section179_data.py` are static domain data.
+- **API**: Nine route files — six under `/api/v1/`: `routes.py` (scoring, VIN, pricing, incentives, negotiation, Section 179 calculator), `auth_routes.py` (register, login, refresh, me), `saved_routes.py` (CRUD saved vehicles — Pro only), `alert_routes.py` (CRUD deal alerts — Pro only), `market_routes.py` (market trends + stats — free tier), `dealer_routes.py` (bulk scoring, market intel, inventory analysis, batch VIN decode, task status — API key auth). Two at root: `subscription_routes.py` (checkout, portal, status, success/cancel pages), `webhook_routes.py` (Stripe webhook — Celery dispatch when Redis available, sync fallback otherwise). One dashboard: `dealer_dashboard.py` (Jinja2 + HTMX dealer dashboard with session auth). Auth dependencies in `auth.py` provide `get_current_user_required`, `get_current_user_optional`, and `get_pro_user_required`. Dealer auth in `dealer_auth.py` provides `get_dealership_required` (X-API-Key header + rate limiting).
+- **Services** (`services/`): Stateless functions. `deal_scorer.py` is the core — 5-factor weighted scoring. `auth_service.py` handles bcrypt hashing, JWT creation/verification, user registration. `stripe_service.py` handles Stripe customer creation, checkout sessions, portal sessions, and webhook event processing. `alert_service.py` matches listings against user alerts. `vin_decoder.py` calls NHTSA. `pricing_service.py` checks DB cache, falls back to ratio estimates. `negotiation_service.py` generates offers and talking points. `marketcheck_service.py` provides market trends/stats with DB caching, retry logic (tenacity), circuit breaker, and graceful fallback to stub data. `section179_service.py` calculates tax deductions for business vehicles. `email_service.py` sends emails via SMTP or SendGrid.
+- **Tasks** (`tasks/`): Celery background tasks. `webhook_tasks.py` processes Stripe events asynchronously. `alert_tasks.py` checks alerts against listings and sends notification emails. `market_tasks.py` refreshes MarketCheck cache every 6 hours. `vin_tasks.py` decodes VINs in batch for dealers.
+- **Database** (`database/`): SQLAlchemy 2.0 mapped classes. SQLite for dev, PostgreSQL for production (via `DATABASE_URL`). Postgres connection pooling enabled (pool_size=10, max_overflow=20, pool_pre_ping). Ten tables: `users` (with subscription fields), `vehicles` (VIN-keyed), `listing_sightings`, `invoice_price_cache`, `incentive_programs`, `saved_vehicles` (FK → users), `deal_alerts` (FK → users), `processed_webhook_events` (Stripe idempotency), `market_data_cache` (cached MarketCheck responses with TTL), `dealerships` (API tier accounts with rate limiting + dashboard password). Alembic manages migrations (`alembic/versions/`). `render_as_batch` is conditional (only for SQLite).
+- **Config** (`config/`): `settings.py` uses pydantic-settings with `.env`. Includes JWT settings, Stripe keys, MarketCheck API key, dealer API key salt, Redis/Celery URLs, email settings (SMTP + SendGrid), and `environment` (development/production). `validate_production()` blocks startup if JWT secret, Stripe keys, dealer salt, or Redis URL are default/missing in production. Helper properties `effective_celery_broker` and `effective_celery_backend` fall back to `redis_url` or `memory://`. `holdback_rates.py`, `invoice_ranges.py`, and `section179_data.py` are static domain data.
+- **Templates** (`templates/`): Jinja2 templates for dealer dashboard (`dealer/`) and email notifications (`email/`). Dashboard uses HTMX for partial page updates. All templates use auto-escaping.
+- **Static** (`static/`): `dashboard.css` for dealer dashboard styling.
 
 ### Extension (`extension/`)
 
@@ -69,6 +83,10 @@ Layered: **API → Services → Database/Config**
 - **Overlay** (`content/overlay.js`): Injects score badges (0-100, color-coded) onto listing cards. Accepts optional `positionOverride` parameter for per-site positioning.
 - **Side panel** (`sidepanel/`): Five tabs — Analysis (score gauge, price breakdown, offers, market context, talking points), Calculator (manual MSRP→cost→offers), Tax (Section 179 deduction calculator — free tier), Saved (Pro-gated, vehicle list with delete), Alerts (Pro-gated, CRUD alert criteria). Free users see "Pro subscription required" with inline upgrade button. Components in `sidepanel/components/`: `score-gauge.js`, `price-breakdown.js`, `offer-targets.js`, `tax-calculator.js`, `market-context.js`.
 - **Popup** (`popup/`): Backend status, VIN lookup, login/register with auth tab switching, subscription tier badge (Free/Pro), upgrade button (opens Stripe checkout), manage subscription button (opens Stripe portal).
+
+### Docker Compose
+
+Five services: `db` (PostgreSQL 16), `redis` (Redis 7 Alpine), `app` (FastAPI + Alembic migration on startup), `celery-worker`, `celery-beat`. All share `.env` with Docker-internal `DATABASE_URL` and `REDIS_URL` overrides. Postgres data persisted in `pgdata` volume.
 
 ### Message Flow
 
@@ -80,7 +98,11 @@ Popup login → `AUTH_LOGIN` action → service worker → `apiLogin()` in api-c
 
 ### Subscription Flow
 
-Popup "Upgrade to Pro" button → `CREATE_CHECKOUT` action → service worker → `createCheckout()` → `POST /subscription/checkout` (authenticated) → backend creates Stripe Checkout Session → returns URL → extension opens in new tab via `chrome.tabs.create()` → user completes payment on Stripe hosted page → Stripe sends `checkout.session.completed` webhook → `POST /webhooks/stripe` → `process_checkout_completed()` upgrades user to Pro → extension refreshes `/auth/me` to detect new tier.
+Popup "Upgrade to Pro" button → `CREATE_CHECKOUT` action → service worker → `createCheckout()` → `POST /subscription/checkout` (authenticated) → backend creates Stripe Checkout Session → returns URL → extension opens in new tab via `chrome.tabs.create()` → user completes payment on Stripe hosted page → Stripe sends `checkout.session.completed` webhook → `POST /webhooks/stripe` → queued to Celery (or sync fallback) → `process_checkout_completed()` upgrades user to Pro → extension refreshes `/auth/me` to detect new tier.
+
+### Dealer Dashboard Flow
+
+Dealer navigates to `/dashboard/login` → enters email + password → `dealer_dashboard.py` verifies bcrypt hash → signed session cookie set via `itsdangerous.URLSafeTimedSerializer` → redirected to `/dashboard` → overview shows API usage, rate limits, tier. HTMX-powered pages: inventory analysis (submit VINs), market intelligence (make/model trends), usage stats. Partials loaded via `hx-post`/`hx-get` for live updates without full page reload.
 
 ## Deal Scoring Algorithm
 
@@ -105,6 +127,9 @@ Market data (days supply by model) is hardcoded in `deal_scorer.MODEL_DAYS_SUPPL
 - Auth-required endpoints use `Depends(get_current_user_required)`; Pro-only endpoints (saved, alerts) use `Depends(get_pro_user_required)`; free-tier endpoints use no auth or `get_current_user_optional`
 - Invoice/holdback data: Ram/Ford holdback = 3% of MSRP; GM = 3% of invoice. See `holdback_rates.py`.
 - `invoice_ranges.py` lookup tries `"{make} {model}"` then just `"{model}"` to handle cases like "Ram Ram 2500"
+- Celery tasks create their own `SessionLocal()` DB sessions and close them in `finally` blocks
+- Webhook route dispatches to Celery when `settings.redis_url` is set, otherwise processes synchronously
+- Dealer dashboard uses signed cookies (not JWT) for session auth via `itsdangerous`
 
 ## Testing Patterns
 
@@ -118,6 +143,10 @@ Market data (days supply by model) is hardcoded in `deal_scorer.MODEL_DAYS_SUPPL
 - Dealer API tests create a `Dealership` directly in DB with a known API key hash, then pass `X-API-Key` header
 - Mock patching targets where functions are imported, not where defined: e.g., `@patch("backend.api.routes.decode_vin")` not `@patch("backend.services.vin_decoder.decode_vin")`
 - Async tests (VIN decoder DB) use `@pytest.mark.asyncio` and require `pytest-asyncio` package
+- Celery tasks tested by mocking `SessionLocal` at the task module level — no Redis/Celery needed
+- Email service tests mock `smtplib.SMTP` and `SendGridAPIClient`
+- MarketCheck hardening tests use `reset_circuit_breaker()` fixture and mock `httpx.get`
+- Dashboard tests login via POST, capture session cookie, and pass to subsequent requests
 
 ## Security Conventions
 
@@ -137,6 +166,9 @@ These patterns were established during security hardening and must be maintained
 - **External service calls wrapped in try-except.** `market_routes.py` and `dealer_routes.py` catch exceptions from MarketCheck/DB and return generic 502 with `logger.exception()` server-side only.
 - **Path parameters validated.** All Phase 4+ endpoints use `Path(..., min_length=1, max_length=N)` to reject malformed input at the API layer.
 - **Frontend error messages are generic.** Catch blocks in sidepanel.js and popup.js display hardcoded strings, never `err.message` (which may contain backend response text).
+- **Dealer dashboard session cookies are signed.** `itsdangerous.URLSafeTimedSerializer` with `httponly=True`, `samesite="lax"`, 24-hour max age. Reuses existing bcrypt password hashing from `auth_service.py`.
+- **MarketCheck circuit breaker.** Opens after 5 consecutive failures, blocks for 5 minutes, falls back to stub data. Prevents cascading failures when upstream API is down.
+- **Dashboard templates use Jinja2 auto-escaping.** No `|safe` on user-supplied data. No inline JavaScript — all interactivity via HTMX attributes.
 
 ## Seed Data
 
@@ -148,4 +180,4 @@ These patterns were established during security hardening and must be maintained
 - **Phase 2**: Complete — AutoTrader/Cars.com/Edmunds content scripts, user auth (JWT), saved vehicles, deal alerts, privacy policy, deployment prep
 - **Phase 3**: Complete — Stripe subscription billing (Free + Pro tiers), Alembic migrations, tier enforcement (saved/alerts = Pro only), subscription UI in popup + side panel, Chrome Web Store prep (CSP, store listing, privacy policy update), security-audited (0 findings). Celery/Redis deferred.
 - **Phase 4**: Complete — MarketCheck API integration (stub-first with clean swap interface), Section 179 tax calculator (free tier, IRC §280F luxury auto limits, OBBBA 100% bonus depreciation), Dealership API tier (X-API-Key auth, bulk scoring, market intel, inventory analysis, rate limiting), market context in Analysis tab, 185 tests passing (14 test files), 3 audit rounds (0 findings). `create_dealer_key.py` CLI for dealer onboarding.
-- **Phase 5**: Celery background tasks, PostgreSQL migration, live MarketCheck API integration, dealer dashboard
+- **Phase 5**: Complete — Docker Compose (Postgres + Redis + app + Celery worker + beat), Celery background tasks (webhook processing, alert emails, market cache refresh, batch VIN decode), email service (SMTP + SendGrid), MarketCheck API hardening (tenacity retries, circuit breaker, graceful fallback), dealer dashboard (Jinja2 + HTMX, session auth, inventory/market/usage pages), 222 tests passing (18 test files).

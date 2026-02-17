@@ -11,6 +11,13 @@ bcrypt==4.2.1
 email-validator==2.2.0
 psycopg2-binary==2.9.10
 stripe==11.5.0
+celery[redis]==5.4.0
+redis==5.2.1
+Jinja2==3.1.5
+python-multipart==0.0.20
+sendgrid==6.11.0
+tenacity==9.0.0
+itsdangerous==2.2.0
 pytest==8.3.4
 pytest-asyncio==0.25.0
 aiosqlite==0.20.0

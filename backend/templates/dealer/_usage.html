@@ -1,0 +1,19 @@
+<div class="cards">
+    <div class="card">
+        <div class="card-title">Requests Today</div>
+        <div class="card-value">{{ requests_today }} / {{ dealer.daily_rate_limit }}</div>
+        <div class="card-bar">
+            {% set pct = (requests_today / dealer.daily_rate_limit * 100) if dealer.daily_rate_limit else 0 %}
+            <div class="card-bar-fill" style="width: {{ pct|int }}%"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Requests This Month</div>
+        <div class="card-value">{{ requests_this_month }} / {{ dealer.monthly_rate_limit }}</div>
+        <div class="card-bar">
+            {% set pct = (requests_this_month / dealer.monthly_rate_limit * 100) if dealer.monthly_rate_limit else 0 %}
+            <div class="card-bar-fill" style="width: {{ pct|int }}%"></div>
+        </div>
+    </div>
+</div>

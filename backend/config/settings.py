@@ -36,6 +36,22 @@ class Settings(BaseSettings):
     # Base URL for Stripe redirect URLs (success/cancel pages)
     base_url: str = ""
 
+    # Redis / Celery
+    redis_url: str = ""
+    celery_broker_url: str = ""
+    celery_result_backend: str = ""
+
+    # Email
+    email_provider: str = "smtp"  # "smtp" or "sendgrid"
+    sendgrid_api_key: str = ""
+    smtp_host: str = "localhost"
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = True
+    email_from_address: str = "noreply@dealhawk.app"
+    email_from_name: str = "DealHawk"
+
     # Environment
     environment: str = "development"
     log_level: str = "INFO"
@@ -43,6 +59,14 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
+
+    @property
+    def effective_celery_broker(self) -> str:
+        return self.celery_broker_url or self.redis_url or "memory://"
+
+    @property
+    def effective_celery_backend(self) -> str:
+        return self.celery_result_backend or self.redis_url or "cache+memory://"
 
     def validate_production(self) -> None:
         """Raise if production is using insecure defaults."""
@@ -58,6 +82,8 @@ class Settings(BaseSettings):
             raise ValueError("BASE_URL must be set in production (e.g. https://api.dealhawk.app)")
         if self.is_production and self.dealer_api_key_salt == "dealhawk-dealer-key-salt":
             raise ValueError("DEALER_API_KEY_SALT must be changed from the default in production")
+        if self.is_production and not self.redis_url:
+            raise ValueError("REDIS_URL must be set in production")
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

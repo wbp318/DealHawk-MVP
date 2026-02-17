@@ -1,0 +1,27 @@
+{% extends "dealer/base.html" %}
+{% set active = "market" %}
+
+{% block title %}Market Intelligence - DealHawk{% endblock %}
+
+{% block content %}
+<h1>Market Intelligence</h1>
+<p>View market trends and pricing data by make and model.</p>
+
+<form hx-post="/dashboard/partials/market-results" hx-target="#results" hx-swap="innerHTML">
+    <div class="form-row">
+        <div class="form-group">
+            <label for="make">Make</label>
+            <input type="text" id="make" name="make" placeholder="Ram" required>
+        </div>
+        <div class="form-group">
+            <label for="model">Model</label>
+            <input type="text" id="model" name="model" placeholder="1500" required>
+        </div>
+        <div class="form-group form-group-btn">
+            <button type="submit" class="btn btn-primary">Get Trends</button>
+        </div>
+    </div>
+</form>
+
+<div id="results" class="results-container"></div>
+{% endblock %}

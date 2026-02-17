@@ -1,0 +1,60 @@
+{% extends "dealer/base.html" %}
+{% set active = "overview" %}
+
+{% block title %}Dashboard - DealHawk{% endblock %}
+
+{% block content %}
+<h1>Welcome, {{ dealer.name }}</h1>
+
+<div class="cards">
+    <div class="card">
+        <div class="card-title">API Requests Today</div>
+        <div class="card-value">{{ requests_today }} / {{ dealer.daily_rate_limit }}</div>
+        <div class="card-bar">
+            {% set pct = (requests_today / dealer.daily_rate_limit * 100) if dealer.daily_rate_limit else 0 %}
+            <div class="card-bar-fill" style="width: {{ pct|int }}%"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">API Requests This Month</div>
+        <div class="card-value">{{ requests_this_month }} / {{ dealer.monthly_rate_limit }}</div>
+        <div class="card-bar">
+            {% set pct = (requests_this_month / dealer.monthly_rate_limit * 100) if dealer.monthly_rate_limit else 0 %}
+            <div class="card-bar-fill" style="width: {{ pct|int }}%"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Account Tier</div>
+        <div class="card-value tier-badge tier-{{ dealer.tier }}">{{ dealer.tier|capitalize }}</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Account Status</div>
+        <div class="card-value">
+            {% if dealer.is_active %}
+            <span class="status-badge status-active">Active</span>
+            {% else %}
+            <span class="status-badge status-inactive">Inactive</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<h2>Quick Links</h2>
+<div class="cards">
+    <a href="/dashboard/inventory" class="card card-link">
+        <div class="card-title">Inventory Analysis</div>
+        <p>Analyze your inventory age and carrying costs</p>
+    </a>
+    <a href="/dashboard/market" class="card card-link">
+        <div class="card-title">Market Intelligence</div>
+        <p>View market trends by make and model</p>
+    </a>
+    <a href="/dashboard/usage" class="card card-link">
+        <div class="card-title">API Usage</div>
+        <p>Detailed usage statistics and billing</p>
+    </a>
+</div>
+{% endblock %}
