@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Also store for side panel
       await chrome.storage.local.set({ lastVinDecode: data });
     } catch (err) {
-      vinResult.textContent = `Error: ${err.message}`;
+      vinResult.textContent = 'VIN decode failed. Check the VIN and try again.';
       vinResult.style.color = '#dc2626';
     }
 

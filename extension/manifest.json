@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DealHawk - Vehicle Deal Finder",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Scores vehicle deals, calculates true dealer cost, and generates negotiation targets. Find the best truck deals on aged inventory.",
   "homepage_url": "https://github.com/wbp318/DealHawk-MVP/blob/main/PRIVACY_POLICY.md",
   "permissions": [

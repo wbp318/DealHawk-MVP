@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initAnalysis();
   initCalculator();
+  initTax();
   initSaved();
   initAlerts();
 });
@@ -107,6 +108,9 @@ function renderAnalysis(listing, scoreResult) {
     );
   }
 
+  // Fetch and render market context
+  fetchMarketContext(listing);
+
   // Fetch and render negotiation talking points
   fetchTalkingPoints(listing, scoreResult);
 
@@ -200,6 +204,30 @@ async function fetchTalkingPoints(listing, scoreResult) {
       renderTalkingPoints(container, result.talking_points);
     }
   } catch (err) {
+    container.textContent = '';
+  }
+}
+
+async function fetchMarketContext(listing) {
+  const container = document.getElementById('market-context-container');
+  const make = listing.make || '';
+  const model = listing.model || '';
+
+  if (!make || !model) {
+    container.textContent = '';
+    return;
+  }
+
+  try {
+    const result = await chrome.runtime.sendMessage({
+      action: 'GET_MARKET_TRENDS',
+      data: { make, model },
+    });
+
+    if (result && !result.error) {
+      renderMarketContext(container, result);
+    }
+  } catch {
     container.textContent = '';
   }
 }
@@ -303,6 +331,72 @@ function renderTalkingPoints(container, points) {
   }
 
   container.appendChild(card);
+}
+
+// --- Tax Tab ---
+
+function initTax() {
+  const calcBtn = document.getElementById('tax-calc-btn');
+  const resultsDiv = document.getElementById('tax-results');
+
+  if (!calcBtn) return;
+
+  calcBtn.addEventListener('click', async () => {
+    const price = parseFloat(document.getElementById('tax-price').value) || 0;
+    const model = document.getElementById('tax-model').value.trim() || null;
+    const gvwrRaw = parseInt(document.getElementById('tax-gvwr').value);
+    const gvwr = (gvwrRaw > 0) ? gvwrRaw : null;
+    const businessPct = parseFloat(document.getElementById('tax-business-pct').value) || 0;
+    const bracket = parseFloat(document.getElementById('tax-bracket').value) || 0;
+    const stateRate = parseFloat(document.getElementById('tax-state-rate').value) || 0;
+    const downPayment = parseFloat(document.getElementById('tax-down-payment').value) || 0;
+    const interestRate = parseFloat(document.getElementById('tax-interest-rate').value) || 0;
+    const loanTerm = parseInt(document.getElementById('tax-loan-term').value) || 60;
+
+    if (price <= 0) {
+      resultsDiv.textContent = '';
+      const errCard = document.createElement('div');
+      errCard.className = 'card';
+      errCard.style.color = '#dc2626';
+      errCard.textContent = 'Please enter a vehicle price.';
+      resultsDiv.appendChild(errCard);
+      return;
+    }
+
+    calcBtn.textContent = 'Calculating...';
+    calcBtn.disabled = true;
+
+    try {
+      const result = await chrome.runtime.sendMessage({
+        action: 'CALCULATE_SECTION_179',
+        data: {
+          vehicle_price: price,
+          business_use_pct: businessPct,
+          tax_bracket: bracket,
+          state_tax_rate: stateRate,
+          down_payment: downPayment,
+          loan_interest_rate: interestRate,
+          loan_term_months: loanTerm,
+          model: model,
+          gvwr: gvwr,
+        },
+      });
+
+      if (result && result.error) throw new Error(result.error);
+
+      renderTaxResults(resultsDiv, result);
+    } catch (err) {
+      resultsDiv.textContent = '';
+      const errCard = document.createElement('div');
+      errCard.className = 'card';
+      errCard.style.color = '#dc2626';
+      errCard.textContent = 'Calculation failed. Is the backend running?';
+      resultsDiv.appendChild(errCard);
+    }
+
+    calcBtn.textContent = 'Calculate Tax Savings';
+    calcBtn.disabled = false;
+  });
 }
 
 // --- Saved Tab ---
@@ -699,7 +793,7 @@ function initCalculator() {
       const errCard = document.createElement('div');
       errCard.className = 'card';
       errCard.style.color = '#dc2626';
-      errCard.textContent = `Error: ${err.message}. Is the backend running?`;
+      errCard.textContent = 'Calculation failed. Check your inputs and try again.';
       resultsDiv.appendChild(errCard);
     }
 

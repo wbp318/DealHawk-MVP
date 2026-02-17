@@ -460,7 +460,8 @@ class TestProductionValidation:
         from backend.config.settings import Settings
         s = Settings(environment="production", jwt_secret_key="real-secret-here",
                      stripe_secret_key="sk_test", stripe_webhook_secret="whsec_test",
-                     stripe_pro_price_id="price_test", base_url="https://api.example.com")
+                     stripe_pro_price_id="price_test", base_url="https://api.example.com",
+                     dealer_api_key_salt="production-salt-value")
         s.validate_production()  # Should not raise
 
 

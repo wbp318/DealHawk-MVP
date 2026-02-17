@@ -11,6 +11,9 @@ import {
   getPricing,
   getIncentives,
   healthCheck,
+  calculateSection179,
+  getMarketTrends,
+  getMarketStats,
   apiLogin,
   apiRegister,
   apiLogout,
@@ -72,6 +75,22 @@ async function handleMessage(message, sender) {
 
     case 'HEALTH_CHECK':
       return healthCheck();
+
+    // --- Section 179 + Market Data ---
+    case 'CALCULATE_SECTION_179':
+      return calculateSection179(data);
+
+    case 'GET_MARKET_TRENDS':
+      return handleWithCache(
+        `market-trends:${data.make}:${data.model}`,
+        () => getMarketTrends(data.make, data.model)
+      );
+
+    case 'GET_MARKET_STATS':
+      return handleWithCache(
+        `market-stats:${data.make}:${data.model}`,
+        () => getMarketStats(data.make, data.model)
+      );
 
     case 'OPEN_SIDE_PANEL':
       if (sender.tab) {

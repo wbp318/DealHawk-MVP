@@ -8,6 +8,7 @@ from backend.services.vin_decoder import decode_vin
 from backend.services.deal_scorer import score_deal
 from backend.services.pricing_service import get_pricing
 from backend.services.negotiation_service import generate_negotiation_brief
+from backend.services.section179_service import calculate_section_179
 
 router = APIRouter()
 
@@ -27,6 +28,18 @@ class ScoreRequest(BaseModel):
     rebates_available: float = Field(0, ge=0, le=100000)
 
 
+class Section179Request(BaseModel):
+    vehicle_price: float = Field(..., gt=0, le=500000)
+    business_use_pct: float = Field(..., ge=0, le=100)
+    tax_bracket: float = Field(..., ge=0, le=50)
+    state_tax_rate: float = Field(0, ge=0, le=20)
+    down_payment: float = Field(0, ge=0, le=500000)
+    loan_interest_rate: float = Field(0, ge=0, le=30)
+    loan_term_months: int = Field(60, ge=12, le=120)
+    model: str | None = Field(None, max_length=100)
+    gvwr: int | None = Field(None, ge=0, le=50000)
+
+
 class NegotiationRequest(BaseModel):
     asking_price: float = Field(..., gt=0, le=500000)
     msrp: float = Field(..., gt=0, le=500000)
@@ -42,7 +55,7 @@ class NegotiationRequest(BaseModel):
 
 @router.get("/health")
 def health_check():
-    return {"status": "ok", "service": "dealhawk", "version": "0.2.0"}
+    return {"status": "ok", "service": "dealhawk", "version": "0.4.0"}
 
 
 @router.get("/vin/{vin}")
@@ -143,3 +156,20 @@ def get_incentives(make: str, model: str | None = None, db: Session = Depends(ge
         }
         for i in incentives
     ]
+
+
+@router.post("/section-179/calculate")
+def section_179_calculate(req: Section179Request):
+    """Calculate Section 179 tax deduction for a business vehicle."""
+    result = calculate_section_179(
+        vehicle_price=req.vehicle_price,
+        business_use_pct=req.business_use_pct,
+        tax_bracket=req.tax_bracket,
+        state_tax_rate=req.state_tax_rate,
+        down_payment=req.down_payment,
+        loan_interest_rate=req.loan_interest_rate,
+        loan_term_months=req.loan_term_months,
+        model=req.model,
+        gvwr_override=req.gvwr,
+    )
+    return result

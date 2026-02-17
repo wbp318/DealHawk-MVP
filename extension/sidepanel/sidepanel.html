@@ -13,6 +13,7 @@
       <nav class="panel__tabs">
         <button class="tab tab--active" data-tab="analysis">Analysis</button>
         <button class="tab" data-tab="calculator">Calculator</button>
+        <button class="tab" data-tab="tax">Tax</button>
         <button class="tab" data-tab="saved">Saved</button>
         <button class="tab" data-tab="alerts">Alerts</button>
       </nav>
@@ -29,6 +30,7 @@
         <div id="score-gauge-container"></div>
         <div id="price-breakdown-container"></div>
         <div id="offer-targets-container"></div>
+        <div id="market-context-container"></div>
         <div id="score-breakdown-container"></div>
         <div id="talking-points-container"></div>
       </div>
@@ -79,6 +81,62 @@
       </div>
 
       <div id="calc-results" hidden></div>
+    </div>
+
+    <!-- Tax Tab -->
+    <div class="panel__content tab-content" id="tab-tax">
+      <h2 class="section-title">Section 179 Calculator</h2>
+      <p class="section-desc">Estimate your first-year tax deduction for a business vehicle purchase.</p>
+
+      <div class="calc-form">
+        <div class="form-group">
+          <label for="tax-price">Vehicle Price ($)</label>
+          <input type="number" id="tax-price" placeholder="65000" step="100">
+        </div>
+        <div class="form-group">
+          <label for="tax-model">Model (optional)</label>
+          <input type="text" id="tax-model" placeholder="e.g. F-250, Ram 2500">
+        </div>
+        <div class="form-group">
+          <label for="tax-gvwr">GVWR (lbs, optional)</label>
+          <input type="number" id="tax-gvwr" placeholder="Auto-detected from model" min="0" max="50000">
+        </div>
+        <div class="form-group">
+          <label for="tax-business-pct">Business Use (%)</label>
+          <input type="number" id="tax-business-pct" value="100" min="0" max="100">
+        </div>
+        <div class="form-group">
+          <label for="tax-bracket">Federal Tax Bracket (%)</label>
+          <select id="tax-bracket">
+            <option value="10">10%</option>
+            <option value="12">12%</option>
+            <option value="22">22%</option>
+            <option value="24">24%</option>
+            <option value="32">32%</option>
+            <option value="35">35%</option>
+            <option value="37" selected>37%</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="tax-state-rate">State Tax Rate (%)</label>
+          <input type="number" id="tax-state-rate" value="0" min="0" max="20" step="0.1">
+        </div>
+        <div class="form-group">
+          <label for="tax-down-payment">Down Payment ($)</label>
+          <input type="number" id="tax-down-payment" value="0" step="500">
+        </div>
+        <div class="form-group">
+          <label for="tax-interest-rate">Loan Interest Rate (%)</label>
+          <input type="number" id="tax-interest-rate" value="0" min="0" max="30" step="0.1">
+        </div>
+        <div class="form-group">
+          <label for="tax-loan-term">Loan Term (months)</label>
+          <input type="number" id="tax-loan-term" value="60" min="12" max="120">
+        </div>
+        <button id="tax-calc-btn" class="btn btn--primary">Calculate Tax Savings</button>
+      </div>
+
+      <div id="tax-results"></div>
     </div>
 
     <!-- Saved Tab -->
@@ -163,6 +221,8 @@
   <script src="components/score-gauge.js"></script>
   <script src="components/price-breakdown.js"></script>
   <script src="components/offer-targets.js"></script>
+  <script src="components/tax-calculator.js"></script>
+  <script src="components/market-context.js"></script>
   <script src="sidepanel.js"></script>
 </body>
 </html>

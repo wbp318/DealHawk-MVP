@@ -51,7 +51,7 @@ body {
 
 .tab {
   flex: 1;
-  padding: 8px 12px;
+  padding: 8px 6px;
   border: none;
   background: none;
   font-size: 13px;
@@ -591,3 +591,134 @@ body {
   background: #94a3b8;
   cursor: not-allowed;
 }
+
+/* Tax calculator results */
+.tax-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.tax-badge--yes {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.tax-badge--no {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.tax-reason {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.tax-note {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.tax-big-number {
+  text-align: center;
+  padding: 12px 0;
+}
+
+.tax-big-number__label {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.tax-big-number__value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a2e;
+  font-variant-numeric: tabular-nums;
+}
+
+.tax-big-number--green .tax-big-number__value {
+  color: #16a34a;
+}
+
+.tax-disclaimer {
+  font-size: 10px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 8px 12px;
+  font-style: italic;
+}
+
+/* Market context grid */
+.market-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.market-item {
+  padding: 8px 0;
+}
+
+.market-item__label {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+
+.market-item__value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.market-item__note {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.market-item__note--green {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.market-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.market-badge--great {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.market-badge--good {
+  background: #fefce8;
+  color: #ca8a04;
+}
+
+.market-badge--poor {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.market-trend {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.market-trend--great { color: #16a34a; }
+.market-trend--good { color: #ca8a04; }
+.market-trend--poor { color: #dc2626; }

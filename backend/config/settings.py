@@ -25,6 +25,14 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ""
     stripe_pro_price_id: str = ""
 
+    # MarketCheck API
+    marketcheck_api_key: str = ""
+    marketcheck_base_url: str = "https://mc-api.marketcheck.com/v2"
+    marketcheck_cache_ttl_hours: int = 24
+
+    # Dealership API
+    dealer_api_key_salt: str = "dealhawk-dealer-key-salt"
+
     # Base URL for Stripe redirect URLs (success/cancel pages)
     base_url: str = ""
 
@@ -48,6 +56,8 @@ class Settings(BaseSettings):
             raise ValueError("STRIPE_PRO_PRICE_ID must be set in production")
         if self.is_production and not self.base_url:
             raise ValueError("BASE_URL must be set in production (e.g. https://api.dealhawk.app)")
+        if self.is_production and self.dealer_api_key_salt == "dealhawk-dealer-key-salt":
+            raise ValueError("DEALER_API_KEY_SALT must be changed from the default in production")
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

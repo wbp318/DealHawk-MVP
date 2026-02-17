@@ -16,7 +16,7 @@ pip install -r backend/requirements.txt
 # Run backend (localhost:8000, Swagger at /docs)
 python -m backend.main
 
-# Run all tests (90 tests; ignore test_vin_decoder if pytest_asyncio not installed)
+# Run all tests (140 tests; ignore test_vin_decoder if pytest_asyncio not installed)
 pytest backend/tests/ --ignore=backend/tests/test_vin_decoder.py -v
 
 # Run a single test file or test
@@ -31,6 +31,9 @@ alembic revision -m "desc"    # Create new migration
 # Seed database with invoice prices and incentives
 python -m backend.seed_data
 
+# Create a dealer API key (for Dealer tier endpoints)
+python -m backend.create_dealer_key --name "Dealer Name" --email "dealer@example.com"
+
 # Load extension: Chrome → chrome://extensions → Developer mode → Load unpacked → select extension/
 ```
 
@@ -40,20 +43,20 @@ python -m backend.seed_data
 
 ```
 Chrome Extension (Manifest V3)  →  Python Backend (FastAPI)
-  4 content scripts (DOM scraping)     services (scoring, VIN, pricing, auth, stripe)
-  service worker (message router)      SQLite database (7 tables + subscription fields)
-  popup + side panel (UI)              JWT auth + Stripe subscription billing
-                                       Alembic migrations
+  4 content scripts (DOM scraping)     services (scoring, VIN, pricing, auth, stripe, market, tax)
+  service worker (message router)      SQLite database (10 tables)
+  popup + side panel (UI)              JWT auth + Stripe billing + Dealer API key auth
+                                       Alembic migrations (4 revisions)
 ```
 
 ### Backend (`backend/`)
 
 Layered: **API → Services → Database/Config**
 
-- **API**: Six route files — four under `/api/v1/`: `routes.py` (scoring, VIN, pricing, incentives, negotiation), `auth_routes.py` (register, login, refresh, me), `saved_routes.py` (CRUD saved vehicles — Pro only), `alert_routes.py` (CRUD deal alerts — Pro only). Two at root: `subscription_routes.py` (checkout, portal, status, success/cancel pages), `webhook_routes.py` (Stripe webhook). Auth dependencies in `auth.py` provide `get_current_user_required`, `get_current_user_optional`, and `get_pro_user_required`.
-- **Services** (`services/`): Stateless functions. `deal_scorer.py` is the core — 5-factor weighted scoring. `auth_service.py` handles bcrypt hashing, JWT creation/verification, user registration. `stripe_service.py` handles Stripe customer creation, checkout sessions, portal sessions, and webhook event processing. `alert_service.py` matches listings against user alerts. `vin_decoder.py` calls NHTSA. `pricing_service.py` checks DB cache, falls back to ratio estimates. `negotiation_service.py` generates offers and talking points.
-- **Database** (`database/`): SQLAlchemy 2.0 mapped classes. SQLite for dev (Postgres ready via `DATABASE_URL`). Seven tables: `users` (with subscription fields: `stripe_customer_id`, `subscription_tier`, `subscription_status`, `subscription_stripe_id`, `subscription_current_period_end`), `vehicles` (VIN-keyed), `listing_sightings`, `invoice_price_cache`, `incentive_programs`, `saved_vehicles` (FK → users), `deal_alerts` (FK → users). Alembic manages migrations (`alembic/versions/`).
-- **Config** (`config/`): `settings.py` uses pydantic-settings with `.env`. Includes JWT settings, Stripe keys (`stripe_secret_key`, `stripe_webhook_secret`, `stripe_pro_price_id`), and `environment` (development/production). `validate_production()` blocks startup if JWT secret is default or Stripe key is missing in production. `holdback_rates.py` and `invoice_ranges.py` are static domain data.
+- **API**: Eight route files — six under `/api/v1/`: `routes.py` (scoring, VIN, pricing, incentives, negotiation, Section 179 calculator), `auth_routes.py` (register, login, refresh, me), `saved_routes.py` (CRUD saved vehicles — Pro only), `alert_routes.py` (CRUD deal alerts — Pro only), `market_routes.py` (market trends + stats — free tier), `dealer_routes.py` (bulk scoring, market intel, inventory analysis — API key auth). Two at root: `subscription_routes.py` (checkout, portal, status, success/cancel pages), `webhook_routes.py` (Stripe webhook). Auth dependencies in `auth.py` provide `get_current_user_required`, `get_current_user_optional`, and `get_pro_user_required`. Dealer auth in `dealer_auth.py` provides `get_dealership_required` (X-API-Key header + rate limiting).
+- **Services** (`services/`): Stateless functions. `deal_scorer.py` is the core — 5-factor weighted scoring. `auth_service.py` handles bcrypt hashing, JWT creation/verification, user registration. `stripe_service.py` handles Stripe customer creation, checkout sessions, portal sessions, and webhook event processing. `alert_service.py` matches listings against user alerts. `vin_decoder.py` calls NHTSA. `pricing_service.py` checks DB cache, falls back to ratio estimates. `negotiation_service.py` generates offers and talking points. `marketcheck_service.py` provides market trends/stats with DB caching (stub data or live MarketCheck API). `section179_service.py` calculates tax deductions for business vehicles.
+- **Database** (`database/`): SQLAlchemy 2.0 mapped classes. SQLite for dev (Postgres ready via `DATABASE_URL`). Ten tables: `users` (with subscription fields), `vehicles` (VIN-keyed), `listing_sightings`, `invoice_price_cache`, `incentive_programs`, `saved_vehicles` (FK → users), `deal_alerts` (FK → users), `processed_webhook_events` (Stripe idempotency), `market_data_cache` (cached MarketCheck responses with TTL), `dealerships` (API tier accounts with rate limiting). Alembic manages migrations (`alembic/versions/`).
+- **Config** (`config/`): `settings.py` uses pydantic-settings with `.env`. Includes JWT settings, Stripe keys, MarketCheck API key, dealer API key salt, and `environment` (development/production). `validate_production()` blocks startup if JWT secret, Stripe keys, or dealer salt are default in production. `holdback_rates.py`, `invoice_ranges.py`, and `section179_data.py` are static domain data.
 
 ### Extension (`extension/`)
 
@@ -61,7 +64,7 @@ Layered: **API → Services → Database/Config**
 - **API client** (`background/api-client.js`): HTTP methods with JWT token management. Stores tokens in `chrome.storage.local`. Auto-injects `Authorization: Bearer` header. Auto-refreshes on 401 with `_refreshInProgress` flag to prevent infinite retry loops.
 - **Content scripts** (`content/`): Four site-specific scripts (cargurus.js, autotrader.js, carscom.js, edmunds.js) all follow the same IIFE pattern — `PROCESSED_ATTR` dedup, initial `setTimeout(scanPage)`, `MutationObserver` with debounce, `scanSearchResults()`/`scanDetailPage()` routing by URL, multi-selector fallbacks.
 - **Overlay** (`content/overlay.js`): Injects score badges (0-100, color-coded) onto listing cards. Accepts optional `positionOverride` parameter for per-site positioning.
-- **Side panel** (`sidepanel/`): Four tabs — Analysis (score gauge, price breakdown, offers, talking points), Calculator (manual MSRP→cost→offers), Saved (Pro-gated, vehicle list with delete), Alerts (Pro-gated, CRUD alert criteria). Free users see "Pro subscription required" with inline upgrade button.
+- **Side panel** (`sidepanel/`): Five tabs — Analysis (score gauge, price breakdown, offers, market context, talking points), Calculator (manual MSRP→cost→offers), Tax (Section 179 deduction calculator — free tier), Saved (Pro-gated, vehicle list with delete), Alerts (Pro-gated, CRUD alert criteria). Free users see "Pro subscription required" with inline upgrade button. Components in `sidepanel/components/`: `score-gauge.js`, `price-breakdown.js`, `offer-targets.js`, `tax-calculator.js`, `market-context.js`.
 - **Popup** (`popup/`): Backend status, VIN lookup, login/register with auth tab switching, subscription tier badge (Free/Pro), upgrade button (opens Stripe checkout), manage subscription button (opens Stripe portal).
 
 ### Message Flow
@@ -109,6 +112,7 @@ Market data (days supply by model) is hardcoded in `deal_scorer.MODEL_DAYS_SUPPL
 - Stripe calls in tests are mocked with `unittest.mock.patch` — no real Stripe keys needed
 - Password hashing uses bcrypt directly (not passlib — incompatible with bcrypt >= 4.1)
 - Custom `DuplicateEmailError` exception (not ValueError) for registration conflicts
+- Dealer API tests create a `Dealership` directly in DB with a known API key hash, then pass `X-API-Key` header
 
 ## Security Conventions
 
@@ -123,6 +127,11 @@ These patterns were established during security hardening and must be maintained
 - **JWT secret guard.** `settings.validate_production()` raises on startup if the default dev secret is used in production.
 - **Timing attack mitigation.** `authenticate_user()` runs a dummy bcrypt check on non-existent users to prevent email enumeration via response time.
 - **Passwords hashed with bcrypt directly.** Not passlib (broken with bcrypt >= 4.1). `DuplicateEmailError` is a custom exception, not ValueError, to prevent register endpoint from masking hash errors as "email already exists".
+- **Dealer API key comparison is constant-time.** `dealer_auth.py` fetches all active dealers and uses `hmac.compare_digest()` against each hash — prevents timing-based API key enumeration.
+- **Rate limit counters use atomic SQL UPDATE.** `Dealership.requests_today + 1` is evaluated at DB level (not Python) to prevent race conditions under concurrent load.
+- **External service calls wrapped in try-except.** `market_routes.py` and `dealer_routes.py` catch exceptions from MarketCheck/DB and return generic 502 with `logger.exception()` server-side only.
+- **Path parameters validated.** All Phase 4+ endpoints use `Path(..., min_length=1, max_length=N)` to reject malformed input at the API layer.
+- **Frontend error messages are generic.** Catch blocks in sidepanel.js and popup.js display hardcoded strings, never `err.message` (which may contain backend response text).
 
 ## Seed Data
 
@@ -132,5 +141,6 @@ These patterns were established during security hardening and must be maintained
 
 - **Phase 1 (MVP)**: Complete — CarGurus content script, backend scoring/VIN/pricing/negotiation, side panel UI
 - **Phase 2**: Complete — AutoTrader/Cars.com/Edmunds content scripts, user auth (JWT), saved vehicles, deal alerts, privacy policy, deployment prep
-- **Phase 3**: Complete — Stripe subscription billing (Free + Pro tiers), Alembic migrations, tier enforcement (saved/alerts = Pro only), subscription UI in popup + side panel, Chrome Web Store prep (CSP, store listing, privacy policy update), 90 tests passing, security-audited (0 findings). Celery/Redis deferred.
-- **Phase 4**: Dealership API tier, MarketCheck API, market trends, Section 179 calculator, Celery background tasks, PostgreSQL migration
+- **Phase 3**: Complete — Stripe subscription billing (Free + Pro tiers), Alembic migrations, tier enforcement (saved/alerts = Pro only), subscription UI in popup + side panel, Chrome Web Store prep (CSP, store listing, privacy policy update), security-audited (0 findings). Celery/Redis deferred.
+- **Phase 4**: Complete — MarketCheck API integration (stub-first with clean swap interface), Section 179 tax calculator (free tier, IRC §280F luxury auto limits, OBBBA 100% bonus depreciation), Dealership API tier (X-API-Key auth, bulk scoring, market intel, inventory analysis, rate limiting), market context in Analysis tab, 140 tests passing, 3 audit rounds (0 findings). `create_dealer_key.py` CLI for dealer onboarding.
+- **Phase 5**: Celery background tasks, PostgreSQL migration, live MarketCheck API integration, dealer dashboard

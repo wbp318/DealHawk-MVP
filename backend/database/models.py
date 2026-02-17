@@ -199,3 +199,43 @@ class ProcessedWebhookEvent(Base):
     event_id: Mapped[str] = mapped_column(String(255), primary_key=True)
     event_type: Mapped[str] = mapped_column(String(100))
     processed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class MarketDataCache(Base):
+    """Cached MarketCheck API responses with TTL."""
+    __tablename__ = "market_data_cache"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    cache_key: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    make: Mapped[str] = mapped_column(String(50))
+    model: Mapped[str] = mapped_column(String(100))
+    data_type: Mapped[str] = mapped_column(String(50))  # "trends" or "stats"
+    response_json: Mapped[str] = mapped_column(Text)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+
+    __table_args__ = (
+        Index("ix_market_cache_make_model_type", "make", "model", "data_type"),
+    )
+
+
+class Dealership(Base):
+    """Dealership API tier account."""
+    __tablename__ = "dealerships"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(200))
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    api_key_hash: Mapped[str] = mapped_column(String(255), unique=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    tier: Mapped[str] = mapped_column(String(50), default="standard")
+    daily_rate_limit: Mapped[int] = mapped_column(Integer, default=1000)
+    monthly_rate_limit: Mapped[int] = mapped_column(Integer, default=25000)
+    requests_today: Mapped[int] = mapped_column(Integer, default=0)
+    requests_this_month: Mapped[int] = mapped_column(Integer, default=0)
+    last_request_date: Mapped[date | None] = mapped_column(Date)
+    last_request_month: Mapped[str | None] = mapped_column(String(7))  # e.g. "2026-02"
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )

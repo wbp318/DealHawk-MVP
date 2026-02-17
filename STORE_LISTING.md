@@ -4,7 +4,7 @@
 DealHawk - Vehicle Deal Scorer
 
 ## Summary (132 char max)
-Score vehicle deals instantly. See true dealer cost, aged inventory alerts, and negotiation targets on CarGurus, AutoTrader & more.
+Score vehicle deals 0-100. True dealer cost, negotiation targets, Section 179 tax calculator on CarGurus, AutoTrader & more.
 
 ## Full Description
 
@@ -17,12 +17,14 @@ Browse trucks and SUVs on CarGurus, AutoTrader, Cars.com, or Edmunds. DealHawk a
 - Deal scores on every listing (0-100 with letter grade)
 - True dealer cost breakdown (invoice, holdback, dealer cash)
 - Three negotiation targets: aggressive, reasonable, and likely
+- Market context: days supply, price trends, active incentives for each model
+- Section 179 tax calculator: estimate your first-year business vehicle deduction (GVWR-aware, pickup truck exemptions)
 - VIN decoder with full vehicle specs
 - Talking points for your negotiation
 
 **DealHawk Pro adds:**
 - Save vehicles and track deals across sessions
-- Custom deal alerts — get notified when listings match your criteria
+- Custom deal alerts -- get notified when listings match your criteria
 - Priority support
 
 **Supported sites:**
@@ -53,11 +55,12 @@ English
 
 ## Screenshots Needed
 
-1. **CarGurus search results** — Score badges overlaid on listing cards showing deal scores (e.g., 82/A, 61/C)
-2. **Side panel analysis** — Full deal breakdown showing score gauge, price table, offer targets, and talking points
-3. **Calculator tab** — Manual MSRP-to-cost calculator with score result
-4. **Popup** — Extension popup showing backend status, VIN lookup, and logged-in user with Pro badge
-5. **Saved vehicles tab** — List of saved vehicles with scores, prices, and dealer info
+1. **CarGurus search results** -- Score badges overlaid on listing cards showing deal scores (e.g., 82/A, 61/C)
+2. **Side panel analysis** -- Full deal breakdown showing score gauge, price table, offer targets, market context, and talking points
+3. **Calculator tab** -- Manual MSRP-to-cost calculator with score result
+4. **Tax tab** -- Section 179 calculator showing deduction, tax savings, and effective cost for a business truck
+5. **Popup** -- Extension popup showing backend status, VIN lookup, and logged-in user with Pro badge
+6. **Saved vehicles tab** -- List of saved vehicles with scores, prices, and dealer info
 
 ## Promotional Images Needed
 

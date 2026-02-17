@@ -5,6 +5,8 @@ from backend.api.routes import router
 from backend.api.auth_routes import auth_router
 from backend.api.saved_routes import saved_router
 from backend.api.alert_routes import alert_router
+from backend.api.market_routes import market_router
+from backend.api.dealer_routes import dealer_router
 from backend.api.subscription_routes import subscription_router
 from backend.api.webhook_routes import webhook_router
 from backend.database.db import init_db
@@ -22,7 +24,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="DealHawk API",
         description="Vehicle deal scoring and negotiation intelligence",
-        version="0.3.0",
+        version="0.4.0",
         **docs_kwargs,
     )
 
@@ -34,13 +36,15 @@ def create_app() -> FastAPI:
         allow_origins=["http://localhost:3000"],
         allow_credentials=False,
         allow_methods=["GET", "POST", "PATCH", "DELETE"],
-        allow_headers=["Content-Type", "Authorization"],
+        allow_headers=["Content-Type", "Authorization", "X-API-Key"],
     )
 
     app.include_router(router, prefix="/api/v1")
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(saved_router, prefix="/api/v1")
     app.include_router(alert_router, prefix="/api/v1")
+    app.include_router(market_router, prefix="/api/v1")
+    app.include_router(dealer_router, prefix="/api/v1")
     app.include_router(subscription_router)
     app.include_router(webhook_router)
 

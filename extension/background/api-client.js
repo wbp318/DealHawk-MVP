@@ -151,6 +151,22 @@ export async function healthCheck() {
   return apiGet('/health');
 }
 
+// --- Section 179 ---
+
+export async function calculateSection179(data) {
+  return apiPost('/section-179/calculate', data);
+}
+
+// --- Market data ---
+
+export async function getMarketTrends(make, model) {
+  return apiGet(`/market/trends/${encodeURIComponent(make)}/${encodeURIComponent(model)}`);
+}
+
+export async function getMarketStats(make, model) {
+  return apiGet(`/market/stats/${encodeURIComponent(make)}/${encodeURIComponent(model)}`);
+}
+
 // --- Auth endpoints ---
 
 export async function apiLogin(email, password) {
