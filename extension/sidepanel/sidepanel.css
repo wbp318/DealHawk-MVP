@@ -438,3 +438,133 @@ body {
 #calc-results .card {
   margin-top: 0;
 }
+
+/* Save button */
+.btn--save {
+  margin-top: 12px;
+  background: #0ea5e9;
+  color: #fff;
+}
+
+.btn--save:hover {
+  background: #0284c7;
+}
+
+.btn--save:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Small delete/action buttons */
+.btn--delete-small {
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 1px solid #fca5a5;
+  border-radius: 4px;
+  background: #fff;
+  color: #dc2626;
+  cursor: pointer;
+  width: auto;
+  margin-top: 8px;
+}
+
+.btn--delete-small:hover {
+  background: #fef2f2;
+}
+
+/* Saved vehicle cards */
+.saved-card {
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.saved-card:hover {
+  border-color: #0ea5e9;
+}
+
+.saved-card__title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.saved-card__details {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.saved-card__score {
+  font-weight: 700;
+}
+
+.saved-card__score--great { color: #16a34a; }
+.saved-card__score--good { color: #ca8a04; }
+.saved-card__score--poor { color: #dc2626; }
+
+.saved-card__meta {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.saved-card__notes {
+  font-size: 12px;
+  color: #64748b;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* Alert cards */
+.alert-card__title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.alert-card__criteria {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.alert-card__status {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.alert-card__status--active {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.alert-card__status--paused {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+/* Alert form */
+.alert-form {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  margin: 12px 0;
+}
+
+.form-group--row {
+  display: flex;
+  gap: 10px;
+}
+
+.form-group--row > div {
+  flex: 1;
+}
+
+#new-alert-btn {
+  margin-bottom: 12px;
+}

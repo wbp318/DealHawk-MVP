@@ -10,9 +10,13 @@
 
   /**
    * Inject a score badge onto a listing card element.
-   * Called by cargurus.js after scoring a listing.
+   * Called by content scripts after scoring a listing.
+   * @param {Element} cardElement - The listing card DOM element
+   * @param {Object} scoreResult - Score data from the API
+   * @param {Object} listing - Extracted listing data
+   * @param {Object} [positionOverride] - Optional CSS overrides for badge position (e.g. {top: '8px', right: '8px'})
    */
-  window.injectScoreBadge = function (cardElement, scoreResult, listing) {
+  window.injectScoreBadge = function (cardElement, scoreResult, listing, positionOverride) {
     if (!cardElement || !scoreResult) return;
 
     // Don't double-inject
@@ -75,6 +79,14 @@
     if (getComputedStyle(wrapper).position === 'static') {
       wrapper.style.position = 'relative';
     }
+
+    // Apply per-site position overrides
+    if (positionOverride) {
+      for (const [prop, value] of Object.entries(positionOverride)) {
+        badge.style[prop] = value;
+      }
+    }
+
     wrapper.appendChild(badge);
   };
 })();

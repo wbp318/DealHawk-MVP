@@ -13,6 +13,36 @@
       <span class="popup__status" id="status-indicator">--</span>
     </header>
 
+    <!-- Auth Section -->
+    <section class="popup__section" id="auth-section">
+      <!-- Logged out: show login/register -->
+      <div id="auth-logged-out" hidden>
+        <div class="popup__auth-tabs">
+          <button class="popup__auth-tab popup__auth-tab--active" id="auth-login-tab">Login</button>
+          <button class="popup__auth-tab" id="auth-register-tab">Register</button>
+        </div>
+        <div id="auth-login-form" class="popup__auth-form">
+          <input type="email" id="login-email" placeholder="Email" spellcheck="false">
+          <input type="password" id="login-password" placeholder="Password">
+          <button id="login-btn" class="popup__btn popup__btn--auth">Log In</button>
+        </div>
+        <div id="auth-register-form" class="popup__auth-form" hidden>
+          <input type="email" id="register-email" placeholder="Email" spellcheck="false">
+          <input type="text" id="register-name" placeholder="Display Name (optional)" maxlength="100">
+          <input type="password" id="register-password" placeholder="Password (8+ chars)">
+          <button id="register-btn" class="popup__btn popup__btn--auth">Register</button>
+        </div>
+        <div id="auth-error" class="popup__auth-error" hidden></div>
+      </div>
+      <!-- Logged in: show user info -->
+      <div id="auth-logged-in" hidden>
+        <div class="popup__user-info">
+          <span class="popup__user-name" id="user-display-name"></span>
+          <button id="logout-btn" class="popup__btn popup__btn--small">Logout</button>
+        </div>
+      </div>
+    </section>
+
     <section class="popup__section">
       <div class="popup__stats">
         <div class="popup__stat">

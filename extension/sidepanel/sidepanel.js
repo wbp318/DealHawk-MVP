@@ -1,12 +1,14 @@
 /**
  * DealHawk Side Panel Controller
- * Manages tabs, loads analysis data, and handles the calculator.
+ * Manages tabs, loads analysis data, handles calculator, saved vehicles, and alerts.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initAnalysis();
   initCalculator();
+  initSaved();
+  initAlerts();
 });
 
 // --- Tab Management ---
@@ -20,6 +22,10 @@ function initTabs() {
 
       document.querySelectorAll('.tab-content').forEach((c) => c.classList.remove('tab-content--active'));
       document.getElementById(`tab-${tab.dataset.tab}`).classList.add('tab-content--active');
+
+      // Refresh saved/alerts when switching to those tabs
+      if (tab.dataset.tab === 'saved') initSaved();
+      if (tab.dataset.tab === 'alerts') initAlerts();
     });
   });
 }
@@ -103,6 +109,65 @@ function renderAnalysis(listing, scoreResult) {
 
   // Fetch and render negotiation talking points
   fetchTalkingPoints(listing, scoreResult);
+
+  // Add "Save This Vehicle" button
+  renderSaveButton(listing, scoreResult);
+}
+
+function renderSaveButton(listing, scoreResult) {
+  // Remove existing save button if any
+  const existing = document.getElementById('save-vehicle-btn');
+  if (existing) existing.remove();
+
+  const container = document.getElementById('analysis-content');
+  const btn = document.createElement('button');
+  btn.id = 'save-vehicle-btn';
+  btn.className = 'btn btn--save';
+  btn.textContent = 'Save This Vehicle';
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+      const saveData = {
+        vin: listing.vin || null,
+        platform: listing.platform || null,
+        listing_url: listing.url || null,
+        asking_price: listing.asking_price || null,
+        msrp: listing.msrp || scoreResult.pricing?.msrp || null,
+        year: listing.year || null,
+        make: listing.make || null,
+        model: listing.model || null,
+        trim: listing.trim || null,
+        days_on_lot: listing.days_on_lot || listing.days_on_platform || null,
+        dealer_name: listing.dealer_name || null,
+        dealer_location: listing.dealer_location || null,
+        deal_score: scoreResult.score || null,
+        deal_grade: scoreResult.grade || null,
+      };
+
+      const result = await chrome.runtime.sendMessage({
+        action: 'SAVE_VEHICLE',
+        data: saveData,
+      });
+
+      if (result && result.error) {
+        btn.textContent = result.error.includes('401') ? 'Log in to Save' : 'Save Failed';
+      } else {
+        btn.textContent = 'Saved!';
+      }
+    } catch (err) {
+      btn.textContent = 'Log in to Save';
+    }
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = 'Save This Vehicle';
+    }, 2000);
+  });
+
+  container.appendChild(btn);
 }
 
 async function fetchTalkingPoints(listing, scoreResult) {
@@ -231,6 +296,262 @@ function renderTalkingPoints(container, points) {
   }
 
   container.appendChild(card);
+}
+
+// --- Saved Tab ---
+
+async function initSaved() {
+  const authRequired = document.getElementById('saved-auth-required');
+  const emptyState = document.getElementById('saved-empty');
+  const listContainer = document.getElementById('saved-list');
+
+  if (!authRequired) return;
+
+  try {
+    const user = await chrome.runtime.sendMessage({ action: 'AUTH_GET_ME' });
+    if (!user || user.error || !user.email) {
+      authRequired.hidden = false;
+      emptyState.hidden = true;
+      listContainer.hidden = true;
+      return;
+    }
+  } catch {
+    authRequired.hidden = false;
+    emptyState.hidden = true;
+    listContainer.hidden = true;
+    return;
+  }
+
+  authRequired.hidden = true;
+
+  try {
+    const vehicles = await chrome.runtime.sendMessage({ action: 'GET_SAVED_VEHICLES' });
+    if (!vehicles || vehicles.error || vehicles.length === 0) {
+      emptyState.hidden = false;
+      listContainer.hidden = true;
+      return;
+    }
+
+    emptyState.hidden = true;
+    listContainer.hidden = false;
+    listContainer.textContent = '';
+
+    for (const v of vehicles) {
+      const card = document.createElement('div');
+      card.className = 'card saved-card';
+
+      const title = document.createElement('div');
+      title.className = 'saved-card__title';
+      title.textContent = [v.year, v.make, v.model, v.trim].filter(Boolean).join(' ') || 'Vehicle';
+      card.appendChild(title);
+
+      const details = document.createElement('div');
+      details.className = 'saved-card__details';
+
+      if (v.deal_score != null) {
+        const scoreSpan = document.createElement('span');
+        scoreSpan.className = 'saved-card__score';
+        const scoreClass = v.deal_score >= 80 ? 'great' : v.deal_score >= 50 ? 'good' : 'poor';
+        scoreSpan.classList.add(`saved-card__score--${scoreClass}`);
+        scoreSpan.textContent = `${v.deal_score} (${v.deal_grade || ''})`;
+        details.appendChild(scoreSpan);
+      }
+
+      if (v.asking_price) {
+        const priceSpan = document.createElement('span');
+        priceSpan.textContent = `$${v.asking_price.toLocaleString()}`;
+        details.appendChild(priceSpan);
+      }
+
+      card.appendChild(details);
+
+      const meta = document.createElement('div');
+      meta.className = 'saved-card__meta';
+      meta.textContent = [v.dealer_name, v.platform, v.saved_at?.split('T')[0]].filter(Boolean).join(' | ');
+      card.appendChild(meta);
+
+      if (v.notes) {
+        const notes = document.createElement('div');
+        notes.className = 'saved-card__notes';
+        notes.textContent = v.notes;
+        card.appendChild(notes);
+      }
+
+      // Delete button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn btn--delete-small';
+      deleteBtn.textContent = 'Remove';
+      deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        deleteBtn.disabled = true;
+        try {
+          await chrome.runtime.sendMessage({
+            action: 'DELETE_SAVED_VEHICLE',
+            data: { id: v.id },
+          });
+          card.remove();
+          // Check if list is now empty
+          if (listContainer.children.length === 0) {
+            emptyState.hidden = false;
+            listContainer.hidden = true;
+          }
+        } catch {
+          deleteBtn.disabled = false;
+        }
+      });
+      card.appendChild(deleteBtn);
+
+      // Click card to load analysis
+      card.addEventListener('click', () => {
+        const fakeScoreResult = {
+          score: v.deal_score,
+          grade: v.deal_grade,
+          pricing: v.msrp ? { msrp: v.msrp } : null,
+        };
+        chrome.storage.local.set({
+          currentListing: { ...v, scoreResult: fakeScoreResult },
+        });
+        // Switch to analysis tab
+        document.querySelector('[data-tab="analysis"]').click();
+      });
+
+      listContainer.appendChild(card);
+    }
+  } catch {
+    emptyState.hidden = false;
+    listContainer.hidden = true;
+  }
+}
+
+// --- Alerts Tab ---
+
+async function initAlerts() {
+  const authRequired = document.getElementById('alerts-auth-required');
+  const emptyState = document.getElementById('alerts-empty');
+  const listContainer = document.getElementById('alerts-list');
+  const newBtn = document.getElementById('new-alert-btn');
+  const createForm = document.getElementById('alert-create-form');
+
+  if (!authRequired) return;
+
+  try {
+    const user = await chrome.runtime.sendMessage({ action: 'AUTH_GET_ME' });
+    if (!user || user.error || !user.email) {
+      authRequired.hidden = false;
+      emptyState.hidden = true;
+      listContainer.hidden = true;
+      if (newBtn) newBtn.hidden = true;
+      if (createForm) createForm.hidden = true;
+      return;
+    }
+  } catch {
+    authRequired.hidden = false;
+    emptyState.hidden = true;
+    listContainer.hidden = true;
+    if (newBtn) newBtn.hidden = true;
+    if (createForm) createForm.hidden = true;
+    return;
+  }
+
+  authRequired.hidden = true;
+  if (newBtn) newBtn.hidden = false;
+
+  // Setup new alert button
+  if (newBtn && createForm) {
+    newBtn.onclick = () => {
+      createForm.hidden = !createForm.hidden;
+    };
+  }
+
+  // Setup create form submit
+  const submitBtn = document.getElementById('alert-submit-btn');
+  if (submitBtn) {
+    submitBtn.onclick = async () => {
+      const alertData = {
+        name: document.getElementById('alert-name').value.trim() || 'My Alert',
+        make: document.getElementById('alert-make').value || null,
+        model: document.getElementById('alert-model').value.trim() || null,
+        year_min: parseInt(document.getElementById('alert-year-min').value) || null,
+        year_max: parseInt(document.getElementById('alert-year-max').value) || null,
+        price_max: parseFloat(document.getElementById('alert-price-max').value) || null,
+        score_min: parseInt(document.getElementById('alert-score-min').value) || null,
+      };
+
+      submitBtn.disabled = true;
+      try {
+        await chrome.runtime.sendMessage({ action: 'CREATE_ALERT', data: alertData });
+        if (createForm) createForm.hidden = true;
+        initAlerts(); // Refresh
+      } catch {
+        submitBtn.disabled = false;
+      }
+      submitBtn.disabled = false;
+    };
+  }
+
+  try {
+    const alerts = await chrome.runtime.sendMessage({ action: 'GET_ALERTS' });
+    if (!alerts || alerts.error || alerts.length === 0) {
+      emptyState.hidden = false;
+      listContainer.hidden = true;
+      return;
+    }
+
+    emptyState.hidden = true;
+    listContainer.hidden = false;
+    listContainer.textContent = '';
+
+    for (const a of alerts) {
+      const card = document.createElement('div');
+      card.className = 'card alert-card';
+
+      const title = document.createElement('div');
+      title.className = 'alert-card__title';
+      title.textContent = a.name;
+      card.appendChild(title);
+
+      const criteria = document.createElement('div');
+      criteria.className = 'alert-card__criteria';
+      const parts = [];
+      if (a.make) parts.push(a.make);
+      if (a.model) parts.push(a.model);
+      if (a.year_min || a.year_max) parts.push(`${a.year_min || '?'}-${a.year_max || '?'}`);
+      if (a.price_max) parts.push(`< $${a.price_max.toLocaleString()}`);
+      if (a.score_min) parts.push(`Score ${a.score_min}+`);
+      criteria.textContent = parts.join(' | ') || 'Any vehicle';
+      card.appendChild(criteria);
+
+      const statusSpan = document.createElement('span');
+      statusSpan.className = `alert-card__status ${a.is_active ? 'alert-card__status--active' : 'alert-card__status--paused'}`;
+      statusSpan.textContent = a.is_active ? 'Active' : 'Paused';
+      card.appendChild(statusSpan);
+
+      // Delete button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn btn--delete-small';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        deleteBtn.disabled = true;
+        try {
+          await chrome.runtime.sendMessage({ action: 'DELETE_ALERT', data: { id: a.id } });
+          card.remove();
+          if (listContainer.children.length === 0) {
+            emptyState.hidden = false;
+            listContainer.hidden = true;
+          }
+        } catch {
+          deleteBtn.disabled = false;
+        }
+      });
+      card.appendChild(deleteBtn);
+
+      listContainer.appendChild(card);
+    }
+  } catch {
+    emptyState.hidden = false;
+    listContainer.hidden = true;
+  }
 }
 
 // --- Calculator Tab ---

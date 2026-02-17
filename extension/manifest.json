@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
   "name": "DealHawk - Vehicle Deal Finder",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Scores vehicle deals, calculates true dealer cost, and generates negotiation targets. Find the best truck deals on aged inventory.",
+  "homepage_url": "https://github.com/wbp318/DealHawk-MVP/blob/main/PRIVACY_POLICY.md",
   "permissions": [
     "storage",
     "sidePanel",
@@ -16,6 +17,24 @@
     {
       "matches": ["https://www.cargurus.com/*"],
       "js": ["content/cargurus.js", "content/overlay.js"],
+      "css": ["content/overlay.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.autotrader.com/*"],
+      "js": ["content/autotrader.js", "content/overlay.js"],
+      "css": ["content/overlay.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.cars.com/*"],
+      "js": ["content/carscom.js", "content/overlay.js"],
+      "css": ["content/overlay.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.edmunds.com/*"],
+      "js": ["content/edmunds.js", "content/overlay.js"],
       "css": ["content/overlay.css"],
       "run_at": "document_idle"
     }

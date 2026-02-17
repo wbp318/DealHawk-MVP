@@ -7,6 +7,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   const vinResult = document.getElementById('vin-result');
   const openPanelBtn = document.getElementById('open-panel-btn');
 
+  // Auth elements
+  const authLoggedOut = document.getElementById('auth-logged-out');
+  const authLoggedIn = document.getElementById('auth-logged-in');
+  const authError = document.getElementById('auth-error');
+  const userDisplayName = document.getElementById('user-display-name');
+  const loginTab = document.getElementById('auth-login-tab');
+  const registerTab = document.getElementById('auth-register-tab');
+  const loginForm = document.getElementById('auth-login-form');
+  const registerForm = document.getElementById('auth-register-form');
+  const loginBtn = document.getElementById('login-btn');
+  const registerBtn = document.getElementById('register-btn');
+  const logoutBtn = document.getElementById('logout-btn');
+
   // Check backend health
   try {
     const health = await chrome.runtime.sendMessage({ action: 'HEALTH_CHECK' });
@@ -20,6 +33,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     statusEl.textContent = 'Offline';
     statusEl.className = 'popup__status popup__status--offline';
   }
+
+  // Check auth state
+  await checkAuthState();
 
   // Get current tab's listing status
   try {
@@ -38,7 +54,125 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Tab query might fail - that's fine
   }
 
-  // VIN Decode
+  // --- Auth Tab Switching ---
+  loginTab.addEventListener('click', () => {
+    loginTab.classList.add('popup__auth-tab--active');
+    registerTab.classList.remove('popup__auth-tab--active');
+    loginForm.hidden = false;
+    registerForm.hidden = true;
+    authError.hidden = true;
+  });
+
+  registerTab.addEventListener('click', () => {
+    registerTab.classList.add('popup__auth-tab--active');
+    loginTab.classList.remove('popup__auth-tab--active');
+    registerForm.hidden = false;
+    loginForm.hidden = true;
+    authError.hidden = true;
+  });
+
+  // --- Login ---
+  loginBtn.addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    if (!email || !password) {
+      showAuthError('Please enter email and password');
+      return;
+    }
+
+    loginBtn.disabled = true;
+    loginBtn.textContent = '...';
+    authError.hidden = true;
+
+    try {
+      const result = await chrome.runtime.sendMessage({
+        action: 'AUTH_LOGIN',
+        data: { email, password },
+      });
+      if (result && result.error) {
+        showAuthError('Invalid email or password');
+      } else {
+        await checkAuthState();
+      }
+    } catch (err) {
+      showAuthError('Invalid email or password');
+    }
+
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Log In';
+  });
+
+  // --- Register ---
+  registerBtn.addEventListener('click', async () => {
+    const email = document.getElementById('register-email').value.trim();
+    const displayName = document.getElementById('register-name').value.trim() || null;
+    const password = document.getElementById('register-password').value;
+
+    if (!email || !password) {
+      showAuthError('Please enter email and password');
+      return;
+    }
+    if (password.length < 8) {
+      showAuthError('Password must be at least 8 characters');
+      return;
+    }
+
+    registerBtn.disabled = true;
+    registerBtn.textContent = '...';
+    authError.hidden = true;
+
+    try {
+      const result = await chrome.runtime.sendMessage({
+        action: 'AUTH_REGISTER',
+        data: { email, password, display_name: displayName },
+      });
+      if (result && result.error) {
+        showAuthError('Registration failed. Email may already be in use.');
+      } else {
+        await checkAuthState();
+      }
+    } catch (err) {
+      showAuthError('Registration failed. Email may already be in use.');
+    }
+
+    registerBtn.disabled = false;
+    registerBtn.textContent = 'Register';
+  });
+
+  // --- Logout ---
+  logoutBtn.addEventListener('click', async () => {
+    await chrome.runtime.sendMessage({ action: 'AUTH_LOGOUT' });
+    await checkAuthState();
+  });
+
+  // --- Auth Helpers ---
+  async function checkAuthState() {
+    try {
+      const user = await chrome.runtime.sendMessage({ action: 'AUTH_GET_ME' });
+      if (user && user.email && !user.error) {
+        authLoggedIn.hidden = false;
+        authLoggedOut.hidden = true;
+        userDisplayName.textContent = user.display_name || user.email;
+      } else {
+        showLoggedOut();
+      }
+    } catch {
+      showLoggedOut();
+    }
+  }
+
+  function showLoggedOut() {
+    authLoggedIn.hidden = true;
+    authLoggedOut.hidden = false;
+  }
+
+  function showAuthError(msg) {
+    authError.hidden = false;
+    authError.textContent = msg;
+  }
+
+  // --- VIN Decode ---
   vinBtn.addEventListener('click', async () => {
     const vin = vinInput.value.trim().toUpperCase();
     if (vin.length !== 17) {

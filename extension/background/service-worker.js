@@ -11,6 +11,20 @@ import {
   getPricing,
   getIncentives,
   healthCheck,
+  apiLogin,
+  apiRegister,
+  apiLogout,
+  apiGetMe,
+  apiRefreshToken,
+  getSavedVehicles,
+  saveVehicle,
+  deleteSavedVehicle,
+  updateSavedVehicle,
+  getAlerts,
+  createAlert,
+  deleteAlert,
+  updateAlert,
+  checkAlerts,
 } from './api-client.js';
 
 // Cache TTL: 1 hour
@@ -31,6 +45,7 @@ async function handleMessage(message, sender) {
   const { action, data } = message;
 
   switch (action) {
+    // --- Existing actions ---
     case 'DECODE_VIN':
       return handleWithCache(`vin:${data.vin}`, () => decodeVin(data.vin));
 
@@ -73,10 +88,56 @@ async function handleMessage(message, sender) {
       });
       return { success: true };
 
-    case 'GET_LISTING_STATUS':
+    case 'GET_LISTING_STATUS': {
       const tabId = data.tabId;
       const result = await chrome.storage.local.get(`listings:${tabId}`);
       return result[`listings:${tabId}`] || null;
+    }
+
+    // --- Auth actions ---
+    case 'AUTH_LOGIN':
+      return apiLogin(data.email, data.password);
+
+    case 'AUTH_REGISTER':
+      return apiRegister(data.email, data.password, data.display_name);
+
+    case 'AUTH_LOGOUT':
+      return apiLogout();
+
+    case 'AUTH_GET_ME':
+      return apiGetMe();
+
+    case 'AUTH_REFRESH':
+      return apiRefreshToken(data.refresh_token);
+
+    // --- Saved Vehicles ---
+    case 'SAVE_VEHICLE':
+      return saveVehicle(data);
+
+    case 'GET_SAVED_VEHICLES':
+      return getSavedVehicles();
+
+    case 'DELETE_SAVED_VEHICLE':
+      return deleteSavedVehicle(data.id);
+
+    case 'UPDATE_SAVED_VEHICLE':
+      return updateSavedVehicle(data.id, data.updates);
+
+    // --- Deal Alerts ---
+    case 'GET_ALERTS':
+      return getAlerts();
+
+    case 'CREATE_ALERT':
+      return createAlert(data);
+
+    case 'DELETE_ALERT':
+      return deleteAlert(data.id);
+
+    case 'UPDATE_ALERT':
+      return updateAlert(data.id, data.updates);
+
+    case 'CHECK_ALERTS':
+      return checkAlerts(data);
 
     default:
       return { error: `Unknown action: ${action}` };

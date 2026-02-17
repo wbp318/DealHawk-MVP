@@ -42,7 +42,7 @@ class NegotiationRequest(BaseModel):
 
 @router.get("/health")
 def health_check():
-    return {"status": "ok", "service": "dealhawk", "version": "0.1.0"}
+    return {"status": "ok", "service": "dealhawk", "version": "0.2.0"}
 
 
 @router.get("/vin/{vin}")

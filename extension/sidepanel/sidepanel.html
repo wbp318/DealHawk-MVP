@@ -14,13 +14,14 @@
         <button class="tab tab--active" data-tab="analysis">Analysis</button>
         <button class="tab" data-tab="calculator">Calculator</button>
         <button class="tab" data-tab="saved">Saved</button>
+        <button class="tab" data-tab="alerts">Alerts</button>
       </nav>
     </header>
 
     <!-- Analysis Tab -->
     <div class="panel__content tab-content tab-content--active" id="tab-analysis">
       <div id="analysis-empty" class="empty-state">
-        <p>Browse a CarGurus listing to see deal analysis here.</p>
+        <p>Browse a listing on CarGurus, AutoTrader, Cars.com, or Edmunds to see deal analysis here.</p>
         <p class="empty-state__hint">Click a DealHawk score badge on any listing, or navigate to a vehicle detail page.</p>
       </div>
       <div id="analysis-content" hidden>
@@ -82,10 +83,70 @@
 
     <!-- Saved Tab -->
     <div class="panel__content tab-content" id="tab-saved">
-      <div class="empty-state">
-        <p>Saved vehicles coming in Phase 2.</p>
-        <p class="empty-state__hint">You'll be able to save and compare deals across multiple vehicles here.</p>
+      <div id="saved-auth-required" class="empty-state">
+        <p>Log in to save vehicles.</p>
+        <p class="empty-state__hint">Create an account via the extension popup to save and track deals.</p>
       </div>
+      <div id="saved-empty" class="empty-state" hidden>
+        <p>No saved vehicles yet.</p>
+        <p class="empty-state__hint">Click "Save This Vehicle" on any analysis to start tracking deals.</p>
+      </div>
+      <div id="saved-list" hidden></div>
+    </div>
+
+    <!-- Alerts Tab -->
+    <div class="panel__content tab-content" id="tab-alerts">
+      <div id="alerts-auth-required" class="empty-state">
+        <p>Log in to create deal alerts.</p>
+        <p class="empty-state__hint">Get notified when listings match your criteria.</p>
+      </div>
+      <div id="alerts-empty" class="empty-state" hidden>
+        <p>No deal alerts yet.</p>
+        <p class="empty-state__hint">Create an alert to get notified about matching deals.</p>
+      </div>
+      <button id="new-alert-btn" class="btn btn--primary" hidden>New Alert</button>
+      <div id="alert-create-form" class="alert-form" hidden>
+        <div class="form-group">
+          <label for="alert-name">Alert Name</label>
+          <input type="text" id="alert-name" placeholder="e.g. Ram deals under $50k" maxlength="200">
+        </div>
+        <div class="form-group">
+          <label for="alert-make">Make</label>
+          <select id="alert-make">
+            <option value="">Any</option>
+            <option value="Ford">Ford</option>
+            <option value="Ram">Ram</option>
+            <option value="Chevrolet">Chevrolet</option>
+            <option value="GMC">GMC</option>
+            <option value="Toyota">Toyota</option>
+            <option value="Nissan">Nissan</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="alert-model">Model</label>
+          <input type="text" id="alert-model" placeholder="e.g. Ram 2500">
+        </div>
+        <div class="form-group form-group--row">
+          <div>
+            <label for="alert-year-min">Year Min</label>
+            <input type="number" id="alert-year-min" placeholder="2024" min="1980" max="2030">
+          </div>
+          <div>
+            <label for="alert-year-max">Year Max</label>
+            <input type="number" id="alert-year-max" placeholder="2026" min="1980" max="2030">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="alert-price-max">Max Price ($)</label>
+          <input type="number" id="alert-price-max" placeholder="60000" step="1000">
+        </div>
+        <div class="form-group">
+          <label for="alert-score-min">Min Score</label>
+          <input type="number" id="alert-score-min" placeholder="70" min="0" max="100">
+        </div>
+        <button id="alert-submit-btn" class="btn btn--primary">Create Alert</button>
+      </div>
+      <div id="alerts-list" hidden></div>
     </div>
   </div>
 
