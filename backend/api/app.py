@@ -5,6 +5,8 @@ from backend.api.routes import router
 from backend.api.auth_routes import auth_router
 from backend.api.saved_routes import saved_router
 from backend.api.alert_routes import alert_router
+from backend.api.subscription_routes import subscription_router
+from backend.api.webhook_routes import webhook_router
 from backend.database.db import init_db
 from backend.config.settings import get_settings
 
@@ -20,7 +22,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="DealHawk API",
         description="Vehicle deal scoring and negotiation intelligence",
-        version="0.2.0",
+        version="0.3.0",
         **docs_kwargs,
     )
 
@@ -39,11 +41,14 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(saved_router, prefix="/api/v1")
     app.include_router(alert_router, prefix="/api/v1")
+    app.include_router(subscription_router)
+    app.include_router(webhook_router)
 
     @app.on_event("startup")
     def on_startup():
         settings.validate_production()
-        init_db()
+        if not settings.is_production:
+            init_db()  # Production uses: alembic upgrade head
 
     return app
 

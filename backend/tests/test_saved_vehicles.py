@@ -7,11 +7,12 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from unittest.mock import patch
 
-from backend.database.models import Base
+from backend.database.models import Base, User
 
 
 @pytest.fixture
-def client():
+def _db_session():
+    """Create a test engine and session factory, shared across fixtures."""
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -19,35 +20,46 @@ def client():
     )
     Base.metadata.create_all(bind=engine)
     TestSession = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+    return TestSession
 
-    with patch("backend.database.db.SessionLocal", TestSession):
+
+@pytest.fixture
+def client(_db_session):
+    with patch("backend.database.db.SessionLocal", _db_session):
         from backend.api.app import create_app
         app = create_app()
         yield TestClient(app)
 
 
-@pytest.fixture
-def auth_headers(client):
-    """Register a user and return auth headers."""
-    resp = client.post("/api/v1/auth/register", json={
-        "email": "user1@example.com",
-        "password": "testpass123",
-        "display_name": "User One",
-    })
+def _register_and_upgrade(client, _db_session, email, password, display_name=None):
+    """Register a user, upgrade to Pro tier, return auth headers."""
+    body = {"email": email, "password": password}
+    if display_name:
+        body["display_name"] = display_name
+    resp = client.post("/api/v1/auth/register", json=body)
     token = resp.json()["access_token"]
+
+    # Upgrade user to Pro in DB
+    db = _db_session()
+    user = db.query(User).filter(User.email == email).first()
+    user.subscription_tier = "pro"
+    user.subscription_status = "active"
+    db.commit()
+    db.close()
+
     return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
-def auth_headers_user2(client):
-    """Register a second user and return auth headers."""
-    resp = client.post("/api/v1/auth/register", json={
-        "email": "user2@example.com",
-        "password": "testpass456",
-        "display_name": "User Two",
-    })
-    token = resp.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+def auth_headers(client, _db_session):
+    """Register a Pro user and return auth headers."""
+    return _register_and_upgrade(client, _db_session, "user1@example.com", "testpass123", "User One")
+
+
+@pytest.fixture
+def auth_headers_user2(client, _db_session):
+    """Register a second Pro user and return auth headers."""
+    return _register_and_upgrade(client, _db_session, "user2@example.com", "testpass456", "User Two")
 
 
 SAMPLE_VEHICLE = {

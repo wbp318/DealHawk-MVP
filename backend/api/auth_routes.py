@@ -48,6 +48,8 @@ class UserResponse(BaseModel):
     display_name: str | None
     is_active: bool
     created_at: str
+    subscription_tier: str = "free"
+    subscription_status: str = "active"
 
 
 # --- Endpoints ---
@@ -115,4 +117,6 @@ def get_me(current_user: User = Depends(get_current_user_required)):
         display_name=current_user.display_name,
         is_active=current_user.is_active,
         created_at=str(current_user.created_at),
+        subscription_tier=current_user.subscription_tier or "free",
+        subscription_status=current_user.subscription_status or "active",
     )

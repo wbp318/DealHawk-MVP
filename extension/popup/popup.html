@@ -34,11 +34,16 @@
         </div>
         <div id="auth-error" class="popup__auth-error" hidden></div>
       </div>
-      <!-- Logged in: show user info -->
+      <!-- Logged in: show user info + subscription -->
       <div id="auth-logged-in" hidden>
         <div class="popup__user-info">
           <span class="popup__user-name" id="user-display-name"></span>
+          <span class="popup__tier popup__tier--free" id="tier-badge">Free</span>
           <button id="logout-btn" class="popup__btn popup__btn--small">Logout</button>
+        </div>
+        <div id="subscription-actions" class="popup__subscription">
+          <button id="upgrade-btn" class="popup__btn popup__btn--upgrade">Upgrade to Pro</button>
+          <button id="manage-btn" class="popup__btn popup__btn--manage" hidden>Manage Subscription</button>
         </div>
       </div>
     </section>

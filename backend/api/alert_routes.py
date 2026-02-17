@@ -1,4 +1,4 @@
-"""Deal alert CRUD endpoints + on-demand matching — all require authentication."""
+"""Deal alert CRUD endpoints + on-demand matching — all require Pro subscription."""
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, model_validator
@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from backend.database.db import get_db
 from backend.database.models import DealAlert, User
-from backend.api.auth import get_current_user_required
+from backend.api.auth import get_pro_user_required
 from backend.services.alert_service import check_alerts_for_listing
 
 alert_router = APIRouter(prefix="/alerts", tags=["alerts"])
@@ -71,7 +71,7 @@ class AlertResponse(BaseModel):
 
 @alert_router.get("/", response_model=list[AlertResponse])
 def list_alerts(
-    current_user: User = Depends(get_current_user_required),
+    current_user: User = Depends(get_pro_user_required),
     db: Session = Depends(get_db),
 ):
     """List all deal alerts for the current user."""
@@ -87,7 +87,7 @@ def list_alerts(
 @alert_router.post("/", response_model=AlertResponse, status_code=201)
 def create_alert(
     req: CreateAlertRequest,
-    current_user: User = Depends(get_current_user_required),
+    current_user: User = Depends(get_pro_user_required),
     db: Session = Depends(get_db),
 ):
     """Create a new deal alert."""
@@ -111,7 +111,7 @@ def create_alert(
 @alert_router.get("/{alert_id}", response_model=AlertResponse)
 def get_alert(
     alert_id: int,
-    current_user: User = Depends(get_current_user_required),
+    current_user: User = Depends(get_pro_user_required),
     db: Session = Depends(get_db),
 ):
     """Get a single deal alert by ID."""
@@ -123,7 +123,7 @@ def get_alert(
 def update_alert(
     alert_id: int,
     req: UpdateAlertRequest,
-    current_user: User = Depends(get_current_user_required),
+    current_user: User = Depends(get_pro_user_required),
     db: Session = Depends(get_db),
 ):
     """Update a deal alert's criteria or active status."""
@@ -146,7 +146,7 @@ def update_alert(
 @alert_router.delete("/{alert_id}")
 def delete_alert(
     alert_id: int,
-    current_user: User = Depends(get_current_user_required),
+    current_user: User = Depends(get_pro_user_required),
     db: Session = Depends(get_db),
 ):
     """Delete a deal alert."""
@@ -159,7 +159,7 @@ def delete_alert(
 @alert_router.post("/check")
 def check_alerts(
     req: CheckAlertsRequest,
-    current_user: User = Depends(get_current_user_required),
+    current_user: User = Depends(get_pro_user_required),
     db: Session = Depends(get_db),
 ):
     """Check a listing against the user's active alerts. Returns matching alerts."""

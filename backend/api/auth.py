@@ -59,3 +59,14 @@ def get_current_user_required(
         raise HTTPException(status_code=401, detail="User not found")
 
     return user
+
+
+def get_pro_user_required(
+    current_user: User = Depends(get_current_user_required),
+) -> User:
+    """Returns the user if they have an active Pro subscription, otherwise 403."""
+    if (current_user.subscription_tier or "free") != "pro":
+        raise HTTPException(status_code=403, detail="Pro subscription required")
+    if (current_user.subscription_status or "active") not in ("active", "past_due"):
+        raise HTTPException(status_code=403, detail="Subscription not active")
+    return current_user

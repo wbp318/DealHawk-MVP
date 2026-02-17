@@ -24,11 +24,24 @@ DealHawk is a Chrome extension that scores vehicle deals, calculates true dealer
 - Tracking saved vehicles and evaluating deal alert criteria (authenticated users)
 - No data is used for advertising, profiling, or any purpose other than the features described above
 
+## Payments
+
+DealHawk Pro subscriptions are processed by **Stripe**, a PCI-compliant payment processor.
+
+- Your **email address** is shared with Stripe to create a billing customer record
+- **Card details** are entered on Stripe's hosted checkout page — DealHawk never sees, stores, or processes your card number
+- A **Stripe customer ID** is stored in our database to link your DealHawk account to your Stripe billing record
+- Subscription status (active, canceled, etc.) is synced via Stripe webhooks
+- You can manage or cancel your subscription at any time through the Stripe billing portal, accessible from the extension popup
+
+For Stripe's privacy practices, see [Stripe's Privacy Policy](https://stripe.com/privacy).
+
 ## Third-Party Services
 
-DealHawk connects to one external service:
+DealHawk connects to the following external services:
 
 - **NHTSA vPIC API** (U.S. National Highway Traffic Safety Administration) — a free government API used to decode VINs into vehicle specifications. Only VINs are sent; no personally identifiable information is transmitted.
+- **Stripe** — payment processing for Pro subscriptions. See the Payments section above.
 
 We do not use analytics services, ad networks, or any other third-party tracking.
 

@@ -21,6 +21,13 @@ class User(Base):
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
+    # Subscription (Phase 3)
+    stripe_customer_id: Mapped[str | None] = mapped_column(String(255), unique=True)
+    subscription_tier: Mapped[str] = mapped_column(String(20), default="free")
+    subscription_status: Mapped[str] = mapped_column(String(20), default="active")
+    subscription_stripe_id: Mapped[str | None] = mapped_column(String(255))
+    subscription_current_period_end: Mapped[datetime | None] = mapped_column(DateTime)
+
 
 class Vehicle(Base):
     """Decoded vehicle data keyed by VIN."""
@@ -183,3 +190,12 @@ class IncentiveProgram(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+
+
+class ProcessedWebhookEvent(Base):
+    """Tracks Stripe webhook event IDs to prevent duplicate processing."""
+    __tablename__ = "processed_webhook_events"
+
+    event_id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    event_type: Mapped[str] = mapped_column(String(100))
+    processed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

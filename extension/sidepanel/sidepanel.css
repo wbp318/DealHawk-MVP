@@ -568,3 +568,26 @@ body {
 #new-alert-btn {
   margin-bottom: 12px;
 }
+
+/* Inline upgrade button (used in pro-required states) */
+.btn--upgrade-inline {
+  margin-top: 16px;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  width: auto;
+}
+
+.btn--upgrade-inline:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+}
+
+.btn--upgrade-inline:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}

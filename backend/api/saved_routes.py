@@ -1,4 +1,4 @@
-"""Saved vehicle CRUD endpoints — all require authentication."""
+"""Saved vehicle CRUD endpoints — all require Pro subscription."""
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from backend.database.db import get_db
 from backend.database.models import SavedVehicle, User
-from backend.api.auth import get_current_user_required
+from backend.api.auth import get_pro_user_required
 
 saved_router = APIRouter(prefix="/saved", tags=["saved"])
 
@@ -64,7 +64,7 @@ class SavedVehicleResponse(BaseModel):
 
 @saved_router.get("/", response_model=list[SavedVehicleResponse])
 def list_saved(
-    current_user: User = Depends(get_current_user_required),
+    current_user: User = Depends(get_pro_user_required),
     db: Session = Depends(get_db),
 ):
     """List all saved vehicles for the current user."""
@@ -80,7 +80,7 @@ def list_saved(
 @saved_router.post("/", response_model=SavedVehicleResponse, status_code=201)
 def save_vehicle(
     req: SaveVehicleRequest,
-    current_user: User = Depends(get_current_user_required),
+    current_user: User = Depends(get_pro_user_required),
     db: Session = Depends(get_db),
 ):
     """Save a vehicle listing snapshot."""
@@ -111,7 +111,7 @@ def save_vehicle(
 @saved_router.get("/{vehicle_id}", response_model=SavedVehicleResponse)
 def get_saved(
     vehicle_id: int,
-    current_user: User = Depends(get_current_user_required),
+    current_user: User = Depends(get_pro_user_required),
     db: Session = Depends(get_db),
 ):
     """Get a single saved vehicle by ID."""
@@ -123,7 +123,7 @@ def get_saved(
 def update_saved(
     vehicle_id: int,
     req: UpdateSavedVehicleRequest,
-    current_user: User = Depends(get_current_user_required),
+    current_user: User = Depends(get_pro_user_required),
     db: Session = Depends(get_db),
 ):
     """Update a saved vehicle's notes or score."""
@@ -139,7 +139,7 @@ def update_saved(
 @saved_router.delete("/{vehicle_id}")
 def delete_saved(
     vehicle_id: int,
-    current_user: User = Depends(get_current_user_required),
+    current_user: User = Depends(get_pro_user_required),
     db: Session = Depends(get_db),
 ):
     """Delete a saved vehicle."""

@@ -7,11 +7,12 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from unittest.mock import patch
 
-from backend.database.models import Base
+from backend.database.models import Base, User
 
 
 @pytest.fixture
-def client():
+def _db_session():
+    """Create a test engine and session factory."""
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -19,20 +20,34 @@ def client():
     )
     Base.metadata.create_all(bind=engine)
     TestSession = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+    return TestSession
 
-    with patch("backend.database.db.SessionLocal", TestSession):
+
+@pytest.fixture
+def client(_db_session):
+    with patch("backend.database.db.SessionLocal", _db_session):
         from backend.api.app import create_app
         app = create_app()
         yield TestClient(app)
 
 
 @pytest.fixture
-def auth_headers(client):
+def auth_headers(client, _db_session):
+    """Register a Pro user and return auth headers."""
     resp = client.post("/api/v1/auth/register", json={
         "email": "alertuser@example.com",
         "password": "testpass123",
     })
     token = resp.json()["access_token"]
+
+    # Upgrade to Pro
+    db = _db_session()
+    user = db.query(User).filter(User.email == "alertuser@example.com").first()
+    user.subscription_tier = "pro"
+    user.subscription_status = "active"
+    db.commit()
+    db.close()
+
     return {"Authorization": f"Bearer {token}"}
 
 

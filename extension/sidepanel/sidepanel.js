@@ -153,12 +153,19 @@ function renderSaveButton(listing, scoreResult) {
       });
 
       if (result && result.error) {
-        btn.textContent = result.error.includes('401') ? 'Log in to Save' : 'Save Failed';
+        if (result.error.includes('403')) {
+          btn.textContent = 'Upgrade to Pro';
+        } else if (result.error.includes('401')) {
+          btn.textContent = 'Log in to Save';
+        } else {
+          btn.textContent = 'Save Failed';
+        }
       } else {
         btn.textContent = 'Saved!';
       }
     } catch (err) {
-      btn.textContent = 'Log in to Save';
+      const msg = err.message || '';
+      btn.textContent = msg.includes('403') ? 'Upgrade to Pro' : 'Log in to Save';
     }
 
     setTimeout(() => {
@@ -302,27 +309,61 @@ function renderTalkingPoints(container, points) {
 
 async function initSaved() {
   const authRequired = document.getElementById('saved-auth-required');
+  const proRequired = document.getElementById('saved-pro-required');
   const emptyState = document.getElementById('saved-empty');
   const listContainer = document.getElementById('saved-list');
 
   if (!authRequired) return;
 
+  // Helper to hide all state divs
+  function hideAll() {
+    authRequired.hidden = true;
+    if (proRequired) proRequired.hidden = true;
+    emptyState.hidden = true;
+    listContainer.hidden = true;
+  }
+
+  let user;
   try {
-    const user = await chrome.runtime.sendMessage({ action: 'AUTH_GET_ME' });
+    user = await chrome.runtime.sendMessage({ action: 'AUTH_GET_ME' });
     if (!user || user.error || !user.email) {
+      hideAll();
       authRequired.hidden = false;
-      emptyState.hidden = true;
-      listContainer.hidden = true;
       return;
     }
   } catch {
+    hideAll();
     authRequired.hidden = false;
-    emptyState.hidden = true;
-    listContainer.hidden = true;
     return;
   }
 
-  authRequired.hidden = true;
+  // Check Pro tier
+  if (user.subscription_tier !== 'pro') {
+    hideAll();
+    if (proRequired) {
+      proRequired.hidden = false;
+      const upgradeBtn = document.getElementById('saved-upgrade-btn');
+      if (upgradeBtn) {
+        upgradeBtn.onclick = async () => {
+          upgradeBtn.disabled = true;
+          upgradeBtn.textContent = 'Loading...';
+          try {
+            const result = await chrome.runtime.sendMessage({ action: 'CREATE_CHECKOUT' });
+            if (result && result.checkout_url) {
+              chrome.tabs.create({ url: result.checkout_url });
+            }
+          } catch { /* ignore */ }
+          setTimeout(() => {
+            upgradeBtn.disabled = false;
+            upgradeBtn.textContent = 'Upgrade to Pro';
+          }, 3000);
+        };
+      }
+    }
+    return;
+  }
+
+  hideAll();
 
   try {
     const vehicles = await chrome.runtime.sendMessage({ action: 'GET_SAVED_VEHICLES' });
@@ -427,6 +468,7 @@ async function initSaved() {
 
 async function initAlerts() {
   const authRequired = document.getElementById('alerts-auth-required');
+  const proRequired = document.getElementById('alerts-pro-required');
   const emptyState = document.getElementById('alerts-empty');
   const listContainer = document.getElementById('alerts-list');
   const newBtn = document.getElementById('new-alert-btn');
@@ -434,26 +476,57 @@ async function initAlerts() {
 
   if (!authRequired) return;
 
-  try {
-    const user = await chrome.runtime.sendMessage({ action: 'AUTH_GET_ME' });
-    if (!user || user.error || !user.email) {
-      authRequired.hidden = false;
-      emptyState.hidden = true;
-      listContainer.hidden = true;
-      if (newBtn) newBtn.hidden = true;
-      if (createForm) createForm.hidden = true;
-      return;
-    }
-  } catch {
-    authRequired.hidden = false;
+  // Helper to hide all state divs
+  function hideAll() {
+    authRequired.hidden = true;
+    if (proRequired) proRequired.hidden = true;
     emptyState.hidden = true;
     listContainer.hidden = true;
     if (newBtn) newBtn.hidden = true;
     if (createForm) createForm.hidden = true;
+  }
+
+  let user;
+  try {
+    user = await chrome.runtime.sendMessage({ action: 'AUTH_GET_ME' });
+    if (!user || user.error || !user.email) {
+      hideAll();
+      authRequired.hidden = false;
+      return;
+    }
+  } catch {
+    hideAll();
+    authRequired.hidden = false;
     return;
   }
 
-  authRequired.hidden = true;
+  // Check Pro tier
+  if (user.subscription_tier !== 'pro') {
+    hideAll();
+    if (proRequired) {
+      proRequired.hidden = false;
+      const upgradeBtn = document.getElementById('alerts-upgrade-btn');
+      if (upgradeBtn) {
+        upgradeBtn.onclick = async () => {
+          upgradeBtn.disabled = true;
+          upgradeBtn.textContent = 'Loading...';
+          try {
+            const result = await chrome.runtime.sendMessage({ action: 'CREATE_CHECKOUT' });
+            if (result && result.checkout_url) {
+              chrome.tabs.create({ url: result.checkout_url });
+            }
+          } catch { /* ignore */ }
+          setTimeout(() => {
+            upgradeBtn.disabled = false;
+            upgradeBtn.textContent = 'Upgrade to Pro';
+          }, 3000);
+        };
+      }
+    }
+    return;
+  }
+
+  hideAll();
   if (newBtn) newBtn.hidden = false;
 
   // Setup new alert button

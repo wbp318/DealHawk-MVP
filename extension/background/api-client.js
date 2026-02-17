@@ -246,3 +246,43 @@ export async function updateAlert(id, updates) {
 export async function checkAlerts(listingData) {
   return apiPost('/alerts/check', listingData);
 }
+
+// --- Subscription ---
+
+const SUB_BASE = 'http://localhost:8000';
+
+export async function getSubscriptionStatus() {
+  const headers = await _buildHeaders();
+  const resp = await fetch(`${SUB_BASE}/subscription/status`, { headers });
+  if (!resp.ok) {
+    const error = await resp.text();
+    throw new Error(`Status check failed: ${error}`);
+  }
+  return resp.json();
+}
+
+export async function createCheckout() {
+  const headers = await _buildHeaders();
+  const resp = await fetch(`${SUB_BASE}/subscription/checkout`, {
+    method: 'POST',
+    headers,
+  });
+  if (!resp.ok) {
+    const error = await resp.text();
+    throw new Error(`Checkout failed: ${error}`);
+  }
+  return resp.json();
+}
+
+export async function createPortalSession() {
+  const headers = await _buildHeaders();
+  const resp = await fetch(`${SUB_BASE}/subscription/portal`, {
+    method: 'POST',
+    headers,
+  });
+  if (!resp.ok) {
+    const error = await resp.text();
+    throw new Error(`Portal failed: ${error}`);
+  }
+  return resp.json();
+}

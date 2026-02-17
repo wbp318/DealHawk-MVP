@@ -20,6 +20,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const registerBtn = document.getElementById('register-btn');
   const logoutBtn = document.getElementById('logout-btn');
 
+  // Subscription elements
+  const tierBadge = document.getElementById('tier-badge');
+  const upgradeBtn = document.getElementById('upgrade-btn');
+  const manageBtn = document.getElementById('manage-btn');
+
   // Check backend health
   try {
     const health = await chrome.runtime.sendMessage({ action: 'HEALTH_CHECK' });
@@ -146,6 +151,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     await checkAuthState();
   });
 
+  // --- Upgrade to Pro ---
+  upgradeBtn.addEventListener('click', async () => {
+    upgradeBtn.disabled = true;
+    upgradeBtn.textContent = 'Loading...';
+    try {
+      const result = await chrome.runtime.sendMessage({ action: 'CREATE_CHECKOUT' });
+      if (result && result.checkout_url) {
+        chrome.tabs.create({ url: result.checkout_url });
+      } else if (result && result.error) {
+        upgradeBtn.textContent = 'Error - Try Again';
+      }
+    } catch {
+      upgradeBtn.textContent = 'Error - Try Again';
+    }
+    setTimeout(() => {
+      upgradeBtn.disabled = false;
+      upgradeBtn.textContent = 'Upgrade to Pro';
+    }, 3000);
+  });
+
+  // --- Manage Subscription ---
+  manageBtn.addEventListener('click', async () => {
+    manageBtn.disabled = true;
+    manageBtn.textContent = 'Loading...';
+    try {
+      const result = await chrome.runtime.sendMessage({ action: 'CREATE_PORTAL_SESSION' });
+      if (result && result.portal_url) {
+        chrome.tabs.create({ url: result.portal_url });
+      }
+    } catch {
+      // Silently fail
+    }
+    setTimeout(() => {
+      manageBtn.disabled = false;
+      manageBtn.textContent = 'Manage Subscription';
+    }, 2000);
+  });
+
   // --- Auth Helpers ---
   async function checkAuthState() {
     try {
@@ -154,6 +197,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         authLoggedIn.hidden = false;
         authLoggedOut.hidden = true;
         userDisplayName.textContent = user.display_name || user.email;
+
+        // Show subscription tier
+        const isPro = user.subscription_tier === 'pro';
+        tierBadge.textContent = isPro ? 'Pro' : 'Free';
+        tierBadge.className = isPro ? 'popup__tier popup__tier--pro' : 'popup__tier popup__tier--free';
+        upgradeBtn.hidden = isPro;
+        manageBtn.hidden = !isPro;
       } else {
         showLoggedOut();
       }

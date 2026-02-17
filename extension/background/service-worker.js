@@ -25,6 +25,9 @@ import {
   deleteAlert,
   updateAlert,
   checkAlerts,
+  getSubscriptionStatus,
+  createCheckout,
+  createPortalSession,
 } from './api-client.js';
 
 // Cache TTL: 1 hour
@@ -138,6 +141,16 @@ async function handleMessage(message, sender) {
 
     case 'CHECK_ALERTS':
       return checkAlerts(data);
+
+    // --- Subscription ---
+    case 'GET_SUBSCRIPTION_STATUS':
+      return getSubscriptionStatus();
+
+    case 'CREATE_CHECKOUT':
+      return createCheckout();
+
+    case 'CREATE_PORTAL_SESSION':
+      return createPortalSession();
 
     default:
       return { error: `Unknown action: ${action}` };

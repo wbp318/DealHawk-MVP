@@ -277,3 +277,70 @@ body {
 .popup__btn--small:hover {
   background: #f1f5f9;
 }
+
+/* Subscription tier badge */
+.popup__tier {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.popup__tier--free {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.popup__tier--pro {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #78350f;
+}
+
+/* Subscription actions */
+.popup__subscription {
+  margin-top: 8px;
+}
+
+.popup__btn--upgrade {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.popup__btn--upgrade:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+}
+
+.popup__btn--upgrade:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+.popup__btn--manage {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.popup__btn--manage:hover {
+  background: #f9fafb;
+}
+
+.popup__btn--manage:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+}
