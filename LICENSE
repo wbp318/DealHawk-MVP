@@ -1,46 +1,326 @@
+DEALHAWK PROPRIETARY SOFTWARE LICENSE
+Version 2.0 — Effective February 17, 2026
+
 Copyright (c) 2026 William Brooks Parker. All rights reserved.
 
-DealHawk is the proprietary property of William Brooks Parker, domiciled in
-East Carroll Parish, Louisiana. This Software is protected by United States
-copyright law (17 U.S.C.) and international treaties.
+DealHawk is the exclusive proprietary property of William Brooks Parker,
+domiciled in East Carroll Parish, Louisiana (hereinafter "Owner"). This
+license governs all use of the DealHawk software, including but not limited
+to the Chrome browser extension, backend server application, scoring
+algorithms, API endpoints, database schemas, user interface designs, and all
+associated source code, object code, documentation, and data files
+(collectively, the "Software").
 
-PERMITTED USE:
-You may use the DealHawk Chrome extension solely through the official Chrome
-Web Store distribution, subject to the terms of service presented at the time
-of installation.
+================================================================================
+SECTION 1 — INTELLECTUAL PROPERTY PROTECTION
+================================================================================
 
-RESTRICTIONS:
-You may not, without the prior written consent of William Brooks Parker:
-  - Copy, modify, or create derivative works of the Software
-  - Reverse engineer, decompile, or disassemble the Software
-  - Distribute, sublicense, lease, rent, or lend the Software
-  - Use the Software to build a competing product or service
-  - Remove or alter any proprietary notices or labels on the Software
+This Software is protected under the following federal and state laws:
 
-GOVERNING LAW AND JURISDICTION:
-This license shall be governed by and construed in accordance with the laws of
-the State of Louisiana, without regard to its conflict of law provisions. Any
-dispute arising under or in connection with this license shall be subject to
-the exclusive jurisdiction of the courts of the Sixth Judicial District Court
-for East Carroll Parish, Louisiana, or the United States District Court for
-the Western District of Louisiana, Monroe Division.
+  (a) FEDERAL COPYRIGHT — 17 U.S.C. §§ 101-1332 (Copyright Act of 1976, as
+      amended). The Software constitutes an original work of authorship fixed
+      in a tangible medium of expression. The Owner holds exclusive rights
+      under 17 U.S.C. § 106, including the rights to reproduce, prepare
+      derivative works, distribute copies, and display the work publicly.
 
-Louisiana Civil Code Article 2046 shall apply to the interpretation of this
-license: when the words of a contract are clear and explicit and lead to no
-absurd consequences, no further interpretation may be made in search of the
-parties' intent.
+  (b) DIGITAL MILLENNIUM COPYRIGHT ACT — 17 U.S.C. § 1201 (DMCA). Any
+      circumvention of technological measures that effectively control access
+      to the Software, including but not limited to bypassing authentication
+      mechanisms, API rate limits, or license verification, is a federal
+      offense subject to civil liability under 17 U.S.C. § 1203 (actual
+      damages or statutory damages of $200 to $25,000 per violation) and
+      criminal penalties under 17 U.S.C. § 1204 (fines up to $500,000 and
+      imprisonment up to 5 years for first offense).
 
-LIMITATION OF LIABILITY:
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-WILLIAM BROOKS PARKER BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES ARISING FROM THE USE OF THE
-SOFTWARE. TO THE EXTENT PERMITTED BY LOUISIANA REVISED STATUTES TITLE 9,
-SECTION 2800.1 ET SEQ., ALL IMPLIED WARRANTIES ARE HEREBY DISCLAIMED.
+  (c) COMPUTER FRAUD AND ABUSE ACT — 18 U.S.C. § 1030 (CFAA). Unauthorized
+      access to, or exceeding authorized access to, the Software's backend
+      systems, APIs, or databases constitutes a federal offense. Violators
+      are subject to civil liability under 18 U.S.C. § 1030(g) and criminal
+      penalties including fines and imprisonment up to 10 years.
 
-SEVERABILITY:
-If any provision of this license is held unenforceable under Louisiana law or
-federal law, the remaining provisions shall continue in full force and effect.
+  (d) ECONOMIC ESPIONAGE ACT — 18 U.S.C. §§ 1831-1839. The Software's
+      scoring algorithms, pricing models, negotiation logic, and dealer cost
+      calculations constitute trade secrets. Misappropriation, theft, or
+      unauthorized disclosure of these trade secrets is a federal crime
+      punishable by fines up to $5,000,000 and imprisonment up to 10 years
+      (18 U.S.C. § 1832).
 
-For licensing inquiries: wbp93623@gmail.com
+  (e) DEFEND TRADE SECRETS ACT — 18 U.S.C. § 1836 (DTSA, 2016). The Owner
+      may bring a civil action in federal court for trade secret
+      misappropriation and seek injunctive relief, compensatory damages,
+      exemplary damages up to 2x actual damages for willful and malicious
+      misappropriation, and reasonable attorney's fees.
+
+  (f) LOUISIANA TRADE SECRETS ACT — La. R.S. 51:1431-1439. The Software's
+      algorithms, business logic, and proprietary data derive independent
+      economic value from not being generally known or readily ascertainable,
+      and the Owner has taken reasonable efforts to maintain their secrecy
+      (La. R.S. 51:1431(4)). Misappropriation entitles the Owner to
+      injunctive relief (La. R.S. 51:1433), damages including unjust
+      enrichment (La. R.S. 51:1434), and attorney's fees for willful and
+      malicious misappropriation (La. R.S. 51:1435).
+
+  (g) LOUISIANA DATABASE PROTECTION — La. R.S. 51:1961-1966. The compiled
+      invoice pricing data, incentive program records, holdback rates, and
+      market supply data contained in the Software's database are protected
+      as a substantial investment of the Owner. Unauthorized extraction or
+      reutilization of a substantial part of the database contents is
+      prohibited.
+
+  (h) WIRE FRAUD — 18 U.S.C. § 1343. Use of interstate wire communications
+      to obtain the Software or its trade secrets by means of fraud, false
+      pretenses, or deception constitutes wire fraud, punishable by fines and
+      imprisonment up to 20 years.
+
+================================================================================
+SECTION 2 — PERMITTED USE
+================================================================================
+
+Subject to the terms of this license, the Owner grants end users a limited,
+non-exclusive, non-transferable, revocable license to:
+
+  (a) Use the DealHawk Chrome extension solely through the official Chrome
+      Web Store distribution channel, subject to the terms of service
+      presented at the time of installation;
+
+  (b) Interact with the DealHawk backend API solely through the authorized
+      Chrome extension client, in the normal course of personal vehicle
+      shopping.
+
+This license does NOT grant any right, title, or interest in the Software's
+source code, algorithms, data structures, or architectural designs.
+
+================================================================================
+SECTION 3 — ABSOLUTE RESTRICTIONS
+================================================================================
+
+You may NOT, without the prior express written consent of the Owner, signed
+and dated by the Owner personally:
+
+  (a) COPY OR REPRODUCE — Copy, clone, fork, download, archive, screenshot,
+      photograph, or otherwise reproduce any portion of the Software's source
+      code, object code, algorithms, or data, whether in whole or in part,
+      in any form or medium, whether now known or hereafter devised;
+
+  (b) MODIFY OR DERIVE — Modify, adapt, translate, annotate, alter, or
+      create any derivative work based upon or incorporating any portion of
+      the Software;
+
+  (c) REVERSE ENGINEER — Reverse engineer, decompile, disassemble,
+      deobfuscate, decrypt, or otherwise attempt to derive the source code,
+      algorithms, data structures, or trade secrets of the Software, whether
+      by manual analysis, automated tools, or any other means. This
+      prohibition applies to the fullest extent permitted by law, including
+      but not limited to the DMCA anti-circumvention provisions (17 U.S.C.
+      § 1201);
+
+  (d) DISTRIBUTE — Distribute, publish, sublicense, lease, rent, lend, sell,
+      resell, assign, transfer, or otherwise make available the Software or
+      any portion thereof to any third party, whether for compensation or
+      gratuitously;
+
+  (e) COMPETE — Use the Software, or any knowledge gained from the Software,
+      to build, design, develop, train, improve, market, or operate any
+      product or service that competes with or is substantially similar to
+      DealHawk, including but not limited to vehicle deal scoring tools,
+      dealer cost calculators, negotiation script generators, or automotive
+      listing analysis extensions;
+
+  (f) SCRAPE OR EXTRACT — Use automated means (including bots, crawlers,
+      scrapers, or AI/ML systems) to access, index, extract, harvest, mine,
+      or collect any content, data, algorithms, or outputs from the Software
+      or its API;
+
+  (g) TRAIN AI/ML MODELS — Use the Software's source code, outputs, API
+      responses, scoring results, negotiation scripts, or any other content
+      generated by the Software as training data, fine-tuning data, or
+      evaluation data for any artificial intelligence or machine learning
+      model, system, or service;
+
+  (h) REMOVE NOTICES — Remove, alter, obscure, or deface any copyright
+      notice, trademark, proprietary legend, or attribution contained in
+      or on the Software;
+
+  (i) MISREPRESENT ORIGIN — Represent, imply, or suggest that you are the
+      author, owner, or authorized distributor of the Software, or that any
+      derivative or competing work was independently developed;
+
+  (j) CIRCUMVENT PROTECTIONS — Circumvent, disable, or interfere with any
+      security, authentication, license verification, rate limiting, or
+      access control mechanism in the Software.
+
+================================================================================
+SECTION 4 — TRADE SECRET DESIGNATION
+================================================================================
+
+The following components of the Software are expressly designated as trade
+secrets under both the Defend Trade Secrets Act (18 U.S.C. § 1836) and the
+Louisiana Trade Secrets Act (La. R.S. 51:1431):
+
+  (a) The five-factor weighted deal scoring algorithm and its factor weights,
+      normalization curves, and scoring thresholds;
+
+  (b) The invoice-to-MSRP ratio tables, holdback rate calculations, and
+      true dealer cost computation methodology;
+
+  (c) The negotiation brief generation logic, including offer calculation
+      formulas and talking point templates;
+
+  (d) The compiled market data, including days-supply figures, incentive
+      program records, and invoice price caches;
+
+  (e) The content script DOM extraction selectors and site-specific scraping
+      strategies for each supported automotive listing platform;
+
+  (f) The alert matching algorithm and criteria evaluation logic;
+
+  (g) The system architecture, message flow patterns, and API endpoint
+      designs as an integrated whole.
+
+The Owner has taken reasonable measures to maintain the secrecy of these
+trade secrets, including but not limited to: proprietary licensing, access
+restrictions, this license agreement, and limited distribution.
+
+================================================================================
+SECTION 5 — REMEDIES AND ENFORCEMENT
+================================================================================
+
+  (a) INJUNCTIVE RELIEF — The Owner shall be entitled to seek immediate
+      temporary restraining orders, preliminary injunctions, and permanent
+      injunctions in any court of competent jurisdiction to prevent any
+      actual or threatened violation of this license, without the necessity
+      of proving actual damages or posting bond, to the maximum extent
+      permitted by Louisiana Code of Civil Procedure Articles 3601-3613.
+
+  (b) DAMAGES — In addition to injunctive relief, the Owner shall be
+      entitled to recover: (i) actual damages and lost profits; (ii) unjust
+      enrichment of the violator; (iii) statutory damages as provided by
+      the Copyright Act (17 U.S.C. § 504, up to $150,000 per work for
+      willful infringement); (iv) exemplary damages up to two times actual
+      damages for willful trade secret misappropriation (18 U.S.C. § 1836);
+      and (v) punitive damages as permitted by Louisiana Civil Code
+      Article 2315.4.
+
+  (c) ATTORNEY'S FEES — The prevailing party in any action to enforce this
+      license shall be entitled to recover reasonable attorney's fees and
+      court costs, as provided by 17 U.S.C. § 505, 18 U.S.C. § 1836(b)(3),
+      and La. R.S. 51:1435.
+
+  (d) CRIMINAL REFERRAL — The Owner reserves the right to refer violations
+      to the United States Department of Justice for criminal prosecution
+      under the DMCA (17 U.S.C. § 1204), CFAA (18 U.S.C. § 1030), Economic
+      Espionage Act (18 U.S.C. § 1832), and/or wire fraud statutes (18
+      U.S.C. § 1343), as applicable.
+
+  (e) CUMULATIVE REMEDIES — All remedies under this license are cumulative
+      and not exclusive. Exercise of one remedy does not waive or preclude
+      any other remedy available at law or in equity.
+
+================================================================================
+SECTION 6 — GOVERNING LAW AND JURISDICTION
+================================================================================
+
+  (a) This license shall be governed by and construed in accordance with the
+      laws of the State of Louisiana, including the Louisiana Civil Code,
+      Louisiana Revised Statutes, and Louisiana Code of Civil Procedure,
+      without regard to its conflict of law provisions (La. C.C. Art. 3537).
+
+  (b) Federal claims arising under the Copyright Act, DMCA, CFAA, DTSA, or
+      Economic Espionage Act shall be subject to the exclusive jurisdiction
+      of the United States District Court for the Western District of
+      Louisiana, Monroe Division.
+
+  (c) State law claims shall be subject to the exclusive jurisdiction of the
+      Sixth Judicial District Court for East Carroll Parish, Louisiana.
+
+  (d) The parties consent to personal jurisdiction in the above-named courts
+      and waive any objection based on forum non conveniens or improper venue.
+
+  (e) Louisiana Civil Code Article 2046 shall apply to the interpretation of
+      this license: when the words of a contract are clear and explicit and
+      lead to no absurd consequences, no further interpretation may be made
+      in search of the parties' intent.
+
+  (f) Any ambiguity in this license shall NOT be construed against the Owner
+      as drafter, per Louisiana Civil Code Article 2056, because the Owner
+      has made the terms clear, explicit, and available for review prior to
+      any use of the Software.
+
+================================================================================
+SECTION 7 — LIMITATION OF LIABILITY
+================================================================================
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED
+"AS IS" AND "AS AVAILABLE," WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR PUNITIVE DAMAGES (INCLUDING BUT NOT
+LIMITED TO LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES)
+ARISING FROM OR RELATED TO THE USE OR INABILITY TO USE THE SOFTWARE, EVEN IF
+THE OWNER HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+TO THE EXTENT PERMITTED BY LOUISIANA REVISED STATUTES TITLE 9, SECTION
+2800.1 ET SEQ. (LOUISIANA PRODUCTS LIABILITY ACT) AND LOUISIANA CIVIL CODE
+ARTICLES 2315-2324 (OBLIGATIONS ARISING WITHOUT AGREEMENT), ALL IMPLIED
+WARRANTIES AND STRICT LIABILITY ARE HEREBY DISCLAIMED.
+
+THE SOFTWARE PROVIDES ESTIMATES AND CALCULATIONS FOR INFORMATIONAL PURPOSES
+ONLY. THE OWNER MAKES NO REPRESENTATION OR WARRANTY THAT ANY DEAL SCORE,
+DEALER COST ESTIMATE, OFFER TARGET, OR NEGOTIATION SUGGESTION WILL RESULT
+IN ANY PARTICULAR OUTCOME. VEHICLE PRICING, INCENTIVES, AND MARKET
+CONDITIONS CHANGE FREQUENTLY AND WITHOUT NOTICE.
+
+================================================================================
+SECTION 8 — TERMINATION
+================================================================================
+
+  (a) This license is effective until terminated. The Owner may terminate
+      this license at any time, for any reason or no reason, with or without
+      notice.
+
+  (b) This license terminates automatically and immediately upon any breach
+      of its terms by the licensee.
+
+  (c) Upon termination, the licensee must immediately cease all use of the
+      Software and destroy all copies in their possession or control.
+
+  (d) Sections 1, 3, 4, 5, 6, 7, and 9 survive termination of this license.
+
+================================================================================
+SECTION 9 — GENERAL PROVISIONS
+================================================================================
+
+  (a) ENTIRE AGREEMENT — This license constitutes the entire agreement
+      between the parties regarding the Software and supersedes all prior
+      or contemporaneous agreements, representations, and understandings.
+
+  (b) SEVERABILITY — If any provision of this license is held unenforceable
+      or invalid under Louisiana law, federal law, or the law of any other
+      jurisdiction, the remaining provisions shall continue in full force
+      and effect, and the unenforceable provision shall be reformed to the
+      minimum extent necessary to make it enforceable while preserving the
+      Owner's intent (La. C.C. Art. 2054).
+
+  (c) WAIVER — Failure by the Owner to enforce any provision of this license
+      shall not constitute a waiver of that provision or of the right to
+      enforce it at a later time (La. C.C. Art. 3071).
+
+  (d) ASSIGNMENT — The licensee may not assign or transfer this license or
+      any rights hereunder without the Owner's prior written consent. The
+      Owner may freely assign this license.
+
+  (e) NOTICES — All notices under this license shall be in writing and
+      delivered to the Owner at: wbp93623@gmail.com
+
+  (f) HEADINGS — Section headings are for convenience only and do not affect
+      the interpretation of this license.
+
+================================================================================
+
+William Brooks Parker
+East Carroll Parish, Louisiana
+wbp93623@gmail.com
+
+Effective: February 17, 2026
