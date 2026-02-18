@@ -4,7 +4,11 @@
  * Supports JWT auth with auto-refresh on 401.
  */
 
-const API_BASE = 'http://localhost:8000/api/v1';
+// Backend URL — set to localhost for local dev, Render URL for production
+const API_HOST = 'https://dealhawk-api.onrender.com';
+// const API_HOST = 'http://localhost:8000';  // Uncomment for local dev
+
+const API_BASE = API_HOST + '/api/v1';
 
 // --- Token management ---
 
@@ -265,7 +269,7 @@ export async function checkAlerts(listingData) {
 
 // --- Subscription ---
 
-const SUB_BASE = 'http://localhost:8000';
+const SUB_BASE = API_HOST;
 
 export async function getSubscriptionStatus() {
   const headers = await _buildHeaders();

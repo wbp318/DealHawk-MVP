@@ -61,6 +61,10 @@ class Settings(BaseSettings):
         return self.environment.lower() == "production"
 
     @property
+    def is_deployed(self) -> bool:
+        return self.environment.lower() in ("production", "staging")
+
+    @property
     def effective_celery_broker(self) -> str:
         return self.celery_broker_url or self.redis_url or "memory://"
 

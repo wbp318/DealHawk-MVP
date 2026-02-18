@@ -37,7 +37,7 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origin_regex=r"^chrome-extension://[a-z]{32}$",
-        allow_origins=["http://localhost:3000"],
+        allow_origins=["http://localhost:3000", "https://dealhawk-api.onrender.com"],
         allow_credentials=False,
         allow_methods=["GET", "POST", "PATCH", "DELETE"],
         allow_headers=["Content-Type", "Authorization", "X-API-Key"],
@@ -57,11 +57,15 @@ def create_app() -> FastAPI:
     app.include_router(subscription_router)
     app.include_router(webhook_router)
 
+    @app.get("/health", tags=["health"])
+    def health_check():
+        return {"status": "ok", "version": "0.5.0"}
+
     @app.on_event("startup")
     def on_startup():
         settings.validate_production()
-        if not settings.is_production:
-            init_db()  # Production uses: alembic upgrade head
+        if not settings.is_deployed:
+            init_db()  # Deployed envs use: alembic upgrade head in Dockerfile
 
     return app
 

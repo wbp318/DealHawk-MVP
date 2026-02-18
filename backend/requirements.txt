@@ -18,6 +18,8 @@ python-multipart==0.0.20
 sendgrid==6.11.0
 tenacity==9.0.0
 itsdangerous==2.2.0
+
+# Dev/test dependencies (not needed in production)
 pytest==8.3.4
 pytest-asyncio==0.25.0
 aiosqlite==0.20.0
