@@ -1,0 +1,82 @@
+{% extends "web/base.html" %}
+
+{% block title %}Deal Alerts | DealHawk{% endblock %}
+
+{% block content %}
+<div class="container container--medium">
+    <div class="account-header">
+        <h1>Deal Alerts</h1>
+        <span class="tier-badge tier-badge--{{ user.subscription_tier }}">{{ user.subscription_tier|upper }}</span>
+    </div>
+
+    <nav class="account-nav">
+        <a href="/account">Overview</a>
+        <a href="/account/saved">Saved Vehicles</a>
+        <a href="/account/alerts" class="active">Deal Alerts</a>
+        <a href="/account/subscription">Subscription</a>
+    </nav>
+
+    {% if not is_pro %}
+    <div class="pro-gate card">
+        <h2>Pro Feature</h2>
+        <p>Set up alerts and get notified when deals match your criteria.</p>
+        <form action="/account/upgrade" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-upgrade">Upgrade to Pro - $9/month</button>
+        </form>
+    </div>
+    {% else %}
+
+    <div class="card" style="margin-bottom: 20px;">
+        <div class="card-title">Create Alert</div>
+        <form hx-post="/account/alerts" hx-target="#alert-list" hx-swap="innerHTML" hx-indicator="#alert-loading">
+            <div class="form-group">
+                <label for="name">Alert Name</label>
+                <input type="text" id="name" name="name" class="form-input" placeholder="e.g. Ram 2500 under 60k" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="make">Make</label>
+                    <input type="text" id="make" name="make" class="form-input" placeholder="e.g. Ram">
+                </div>
+                <div class="form-group">
+                    <label for="model">Model</label>
+                    <input type="text" id="model" name="model" class="form-input" placeholder="e.g. 2500">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="year_min">Year Min</label>
+                    <input type="number" id="year_min" name="year_min" class="form-input" min="1980" max="2030">
+                </div>
+                <div class="form-group">
+                    <label for="year_max">Year Max</label>
+                    <input type="number" id="year_max" name="year_max" class="form-input" min="1980" max="2030">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="price_max">Max Price ($)</label>
+                    <input type="number" id="price_max" name="price_max" class="form-input" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="score_min">Min Score (0-100)</label>
+                    <input type="number" id="score_min" name="score_min" class="form-input" min="0" max="100">
+                </div>
+                <div class="form-group">
+                    <label for="days_on_lot_min">Min Days on Lot</label>
+                    <input type="number" id="days_on_lot_min" name="days_on_lot_min" class="form-input" min="0">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <span class="htmx-indicator" id="alert-loading"><span class="spinner"></span></span>
+                Create Alert
+            </button>
+        </form>
+    </div>
+
+    <div id="alert-list">
+        {% include "web/partials/_alert_list.html" %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

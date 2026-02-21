@@ -1,0 +1,36 @@
+{% extends "web/base.html" %}
+
+{% block title %}Market Data - Vehicle Supply, Pricing &amp; Incentives | DealHawk{% endblock %}
+{% block meta_description %}Check days supply, price trends, and available manufacturer incentives for any make and model. Know the market before you negotiate.{% endblock %}
+
+{% block content %}
+<div class="container container--medium">
+    <div class="page-header">
+        <h1>Market Data</h1>
+        <p>Check supply levels, pricing trends, and available incentives for any make and model.</p>
+    </div>
+
+    <div class="form-card">
+        <form hx-post="/tools/market" hx-target="#results" hx-swap="innerHTML" hx-indicator="#market-loading" hx-disabled-elt="#market-btn">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="make">Make</label>
+                    <input type="text" id="make" name="make" class="form-input" placeholder="e.g. Ram" required>
+                </div>
+                <div class="form-group">
+                    <label for="model">Model</label>
+                    <input type="text" id="model" name="model" class="form-input" placeholder="e.g. 2500" required>
+                </div>
+            </div>
+
+            <button type="submit" id="market-btn" class="btn btn-primary btn-full">
+                <span class="htmx-indicator"><span class="spinner"></span></span>
+                <span class="htmx-hide-on-request">Get Market Data</span>
+                <span class="htmx-indicator">Loading...</span>
+            </button>
+        </form>
+    </div>
+
+    <div class="results-area" id="results"></div>
+</div>
+{% endblock %}

@@ -73,22 +73,31 @@ def get_or_create_stripe_customer(user: User, db: Session) -> str:
     return customer.id
 
 
-def create_checkout_session(user: User, db: Session) -> str:
+def create_checkout_session(
+    user: User,
+    db: Session,
+    return_path: str | None = None,
+    cancel_path: str | None = None,
+) -> str:
     """Create a Stripe Checkout Session and return the URL.
 
     Checks both tier and status to prevent duplicate subscriptions.
+    Optional return_path/cancel_path override the default redirect URLs.
     """
     customer_id = get_or_create_stripe_customer(user, db)
 
     base_url = _get_base_url()
     s = _get_stripe()
 
+    success_url = f"{base_url}{return_path}" if return_path else f"{base_url}/subscription/success"
+    cancel_url = f"{base_url}{cancel_path}" if cancel_path else f"{base_url}/subscription/cancel"
+
     session = s.checkout.Session.create(
         customer=customer_id,
         mode="subscription",
         line_items=[{"price": settings.stripe_pro_price_id, "quantity": 1}],
-        success_url=f"{base_url}/subscription/success",
-        cancel_url=f"{base_url}/subscription/cancel",
+        success_url=success_url,
+        cancel_url=cancel_url,
         metadata={"dealhawk_user_id": str(user.id)},
         # Stripe-level guard: only allow one active subscription per customer
         subscription_data={"metadata": {"dealhawk_user_id": str(user.id)}},
@@ -96,16 +105,25 @@ def create_checkout_session(user: User, db: Session) -> str:
     return session.url
 
 
-def create_portal_session(user: User, db: Session) -> str:
-    """Create a Stripe Billing Portal session and return the URL."""
+def create_portal_session(
+    user: User,
+    db: Session,
+    return_path: str | None = None,
+) -> str:
+    """Create a Stripe Billing Portal session and return the URL.
+
+    Optional return_path overrides the default return URL.
+    """
     customer_id = get_or_create_stripe_customer(user, db)
 
     base_url = _get_base_url()
     s = _get_stripe()
 
+    return_url = f"{base_url}{return_path}" if return_path else f"{base_url}/subscription/success"
+
     session = s.billing_portal.Session.create(
         customer=customer_id,
-        return_url=f"{base_url}/subscription/success",
+        return_url=return_url,
     )
     return session.url
 

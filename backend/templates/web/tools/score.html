@@ -1,0 +1,74 @@
+{% extends "web/base.html" %}
+
+{% block title %}Deal Scorer - Calculate True Dealer Cost &amp; Score Your Deal | DealHawk{% endblock %}
+{% block meta_description %}Score any vehicle deal from 0-100. See true dealer cost, holdback, negotiation targets, and carrying costs. Free tool for truck and car buyers.{% endblock %}
+
+{% block content %}
+<div class="container container--medium">
+    <div class="page-header">
+        <h1>Deal Scorer</h1>
+        <p>Enter the deal details below to get a score from 0-100 with negotiation targets.</p>
+    </div>
+
+    <div class="form-card">
+        <form hx-post="/tools/score" hx-target="#results" hx-swap="innerHTML" hx-indicator="#score-loading" hx-disabled-elt="#score-btn">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="year">Year</label>
+                    <input type="number" id="year" name="year" class="form-input" min="1980" max="2030" value="2025" required>
+                </div>
+                <div class="form-group">
+                    <label for="make">Make</label>
+                    <input type="text" id="make" name="make" class="form-input" placeholder="e.g. Ram" required>
+                </div>
+                <div class="form-group">
+                    <label for="model">Model</label>
+                    <input type="text" id="model" name="model" class="form-input" placeholder="e.g. 2500" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="trim">Trim (optional)</label>
+                <input type="text" id="trim" name="trim" class="form-input" placeholder="e.g. Laramie">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="msrp">MSRP ($)</label>
+                    <input type="number" id="msrp" name="msrp" class="form-input" step="0.01" min="1" max="500000" placeholder="65000" required>
+                </div>
+                <div class="form-group">
+                    <label for="asking_price">Asking Price ($)</label>
+                    <input type="number" id="asking_price" name="asking_price" class="form-input" step="0.01" min="1" max="500000" placeholder="58000" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="days_on_lot">Days on Lot</label>
+                    <input type="number" id="days_on_lot" name="days_on_lot" class="form-input" min="0" max="3650" value="0">
+                    <small>Check listing history for date first listed</small>
+                </div>
+                <div class="form-group">
+                    <label for="rebates">Rebates Available ($)</label>
+                    <input type="number" id="rebates" name="rebates" class="form-input" step="0.01" min="0" max="50000" value="0">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="dealer_cash">Dealer Cash ($)</label>
+                <input type="number" id="dealer_cash" name="dealer_cash" class="form-input" step="0.01" min="0" max="50000" value="0">
+                <small>Hidden incentive paid to the dealer by the manufacturer</small>
+            </div>
+
+            <button type="submit" id="score-btn" class="btn btn-primary btn-full">
+                <span class="htmx-indicator"><span class="spinner"></span></span>
+                <span class="htmx-hide-on-request">Score This Deal</span>
+                <span class="htmx-indicator">Scoring...</span>
+            </button>
+        </form>
+    </div>
+
+    <div class="results-area" id="results"></div>
+</div>
+{% endblock %}

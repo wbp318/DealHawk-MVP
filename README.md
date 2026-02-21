@@ -1,22 +1,30 @@
 # DealHawk
 
-Chrome extension that scores vehicle deals, calculates true dealer cost, and generates negotiation targets. Built for the February 2026 truck market where Ram has 300+ days supply, Ford F-Series is at 100+, and ~700K leftover 2025 models are sitting on lots.
+Web app and Chrome extension that scores vehicle deals, calculates true dealer cost, and generates negotiation targets. Built for the February 2026 truck market where Ram has 300+ days supply, Ford F-Series is at 100+, and ~700K leftover 2025 models are sitting on lots.
 
 ## What It Does
 
-Browse CarGurus, AutoTrader, Cars.com, or Edmunds and DealHawk automatically:
+**Web app** (primary): Visit the site to use all four free tools — no account needed.
 
-- **Scores every listing 0-100** using a 5-factor algorithm (price vs dealer cost, days on lot, rebates, market supply, timing)
-- **Calculates true dealer cost** -- invoice minus holdback minus dealer cash, not the inflated number dealers quote
-- **Generates three offer targets** -- aggressive, reasonable, and likely settlement prices based on how long the truck has been sitting
-- **Produces negotiation scripts** -- specific dollar amounts and talking points referencing floor plan costs, curtailment penalties, and competing quotes
-- **Shows market context** -- days supply vs industry average, supply level, price trends, active incentives
-- **Section 179 tax calculator** -- estimate first-year deduction for business vehicles (GVWR-aware, pickup truck exemptions, IRC section 280F limits)
+**Chrome extension** (power-user add-on): Browse CarGurus, AutoTrader, Cars.com, or Edmunds and DealHawk automatically scores listings in-page.
+
+### Free Tools
+
+- **Deal Scorer** -- Score any deal 0-100. See true dealer cost, negotiation targets, and carrying costs.
+- **VIN Decoder** -- Decode any VIN for year, make, model, trim, engine, drivetrain, GVWR, and manufacturing details.
+- **Section 179 Calculator** -- Estimate first-year tax deduction for business vehicles (GVWR-aware, pickup truck exemptions, IRC §280F limits, financing scenarios).
+- **Market Data** -- Check days supply, price trends, and available incentives for any make and model.
+
+### Additional Features
+
+- **Negotiation scripts** -- specific dollar amounts and talking points referencing floor plan costs, curtailment penalties, and competing quotes
+- **Market context** -- days supply vs industry average, supply level, price trends, active incentives
+- **Save vehicles** and **deal alerts** (Pro tier)
 
 ## Tiers
 
-| Feature | Free | Pro ($9.99/mo) | Dealer (API key) |
-|---------|------|-----------------|------------------|
+| Feature | Free | Pro ($9/mo) | Dealer (API key) |
+|---------|------|-------------|------------------|
 | Deal scoring (0-100) | Y | Y | Bulk (50/request) |
 | True dealer cost | Y | Y | Y |
 | Offer targets + scripts | Y | Y | Y |
@@ -31,11 +39,14 @@ Browse CarGurus, AutoTrader, Cars.com, or Edmunds and DealHawk automatically:
 ## Architecture
 
 ```
-Chrome Extension (Manifest V3)  -->  Python Backend (FastAPI + SQLite)
-  4 content scripts (DOM scraping)      9 services, 8 route files
-  service worker (message router)       10 tables (SQLAlchemy 2.0 + Alembic)
-  popup + side panel (5 tabs)           JWT auth + Stripe billing + Dealer API keys
+Public Web App (Jinja2 + HTMX)    Chrome Extension (Manifest V3)    Python Backend (FastAPI)
+  Landing page + 4 free tools        4 content scripts (DOM scraping)    9 services, 11 route files
+  Consumer auth (session cookies)    service worker (message router)     10 tables (SQLAlchemy 2.0 + Alembic)
+  Account: saved, alerts, billing    popup + side panel (5 tabs)         JWT + session cookie + API key auth
+  SEO (robots.txt, sitemap.xml)                                         Stripe billing + Celery + Redis
 ```
+
+**Web app** serves the landing page, four free tool pages (Deal Scorer, VIN Decoder, Section 179 Calculator, Market Data), pricing page, auth (register/login), and account pages (saved vehicles, alerts, subscription management). Uses Jinja2 templates with HTMX for form submissions — no build step, no JavaScript framework. Calls backend services directly (no HTTP round-trip). Session cookie auth (`dh_web_session`) separate from dealer dashboard and API JWT.
 
 **Extension** injects score badges onto listing cards on CarGurus, AutoTrader, Cars.com, and Edmunds. Click a badge to open a side panel with full deal analysis, price breakdown, market context, and negotiation brief. Side panel has five tabs: Analysis, Calculator, Tax, Saved, and Alerts. Popup provides VIN lookup, login/register, and subscription management.
 
@@ -49,13 +60,36 @@ python -m venv venv && source venv/Scripts/activate  # Windows Git Bash
 pip install -r backend/requirements.txt
 alembic upgrade head
 python -m backend.seed_data
-python -m backend.main          # localhost:8000, Swagger at /docs
+python -m backend.main          # localhost:8000
 
-# Extension
+# Visit http://localhost:8000 for the web app
+# Swagger API docs at http://localhost:8000/docs
+
+# Extension (optional)
 # Chrome -> chrome://extensions -> Developer mode -> Load unpacked -> select extension/
 ```
 
-Browse to any supported site and search for trucks. Score badges appear on listings. Click one to open the analysis panel.
+## Web App Routes
+
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/` | GET | Landing page |
+| `/tools/score` | GET/POST | Deal Scorer form + HTMX results |
+| `/tools/vin` | GET/POST | VIN Decoder form + HTMX results |
+| `/tools/tax` | GET/POST | Section 179 Calculator form + HTMX results |
+| `/tools/market` | GET/POST | Market Data form + HTMX results |
+| `/pricing` | GET | Free vs Pro comparison |
+| `/login` | GET/POST | Login (session cookie) |
+| `/register` | GET/POST | Register (auto-login) |
+| `/logout` | GET | Clear session cookie |
+| `/account` | GET | Account overview |
+| `/account/saved` | GET/POST/DELETE | Saved vehicles (Pro) |
+| `/account/alerts` | GET/POST/DELETE/PATCH | Deal alerts (Pro) |
+| `/account/subscription` | GET | Subscription management |
+| `/account/upgrade` | POST | Create Stripe checkout |
+| `/account/manage-billing` | POST | Open Stripe portal |
+| `/robots.txt` | GET | SEO crawl directives |
+| `/sitemap.xml` | GET | SEO sitemap |
 
 ## API
 
@@ -140,7 +174,8 @@ POST /api/v1/score
 ## Tests
 
 ```bash
-pytest backend/tests/ --ignore=backend/tests/test_vin_decoder.py -v   # 140 tests
+pytest backend/tests/ --ignore=backend/tests/test_vin_decoder.py -v   # 265 tests
+pytest backend/tests/test_web_app.py -v                               # 43 web app tests
 pytest backend/tests/test_deal_scorer.py -v                           # single file
 ```
 
@@ -162,8 +197,10 @@ Copy `.env.example` to `.env`. Key settings:
 - **Phase 1 (MVP)** -- Complete. CarGurus + backend scoring + side panel UI.
 - **Phase 2** -- Complete. AutoTrader, Cars.com, Edmunds. User accounts (JWT), saved vehicles, deal alerts.
 - **Phase 3** -- Complete. Stripe subscriptions (Free/Pro tiers), Alembic migrations, tier enforcement, Chrome Web Store prep, security audit (0 findings).
-- **Phase 4** -- Complete. MarketCheck API (stub-first), Section 179 calculator, Dealership API tier (bulk scoring, inventory analysis, rate limiting), market trends in Analysis tab, 140 tests, 3 audit rounds (0 findings).
-- **Phase 5** -- Celery background tasks, PostgreSQL migration, live MarketCheck API, dealer dashboard.
+- **Phase 4** -- Complete. MarketCheck API (stub-first), Section 179 calculator, Dealership API tier (bulk scoring, inventory analysis, rate limiting), market trends in Analysis tab, 185 tests, 3 audit rounds (0 findings).
+- **Phase 5** -- Complete. Docker Compose, Celery background tasks, email service, MarketCheck hardening (retries, circuit breaker), dealer dashboard (Jinja2 + HTMX), 222 tests.
+- **Phase 6** -- Complete. Render.com deployment, staging environment, health check endpoint.
+- **Phase 7 (Web App)** -- Complete. Public-facing web app (Jinja2 + HTMX). Landing page, 4 free tool pages, consumer auth (session cookies), account pages (saved, alerts, subscription), Pro gating, Stripe integration, SEO (robots.txt, sitemap.xml, meta tags), responsive CSS, 265 tests (19 test files).
 
 ## License
 

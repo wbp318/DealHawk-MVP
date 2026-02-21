@@ -1,0 +1,40 @@
+{% if vehicles %}
+{% for v in vehicles %}
+<div class="card saved-card">
+    <div class="saved-card__info">
+        <h3>
+            {% if v.year %}{{ v.year }}{% endif %}
+            {% if v.make %}{{ v.make }}{% endif %}
+            {% if v.model %}{{ v.model }}{% endif %}
+            {% if v.trim %}{{ v.trim }}{% endif %}
+            {% if not v.year and not v.make and not v.model %}Saved Vehicle{% endif %}
+        </h3>
+        <div class="saved-card__meta">
+            {% if v.vin %}VIN: {{ v.vin }}{% endif %}
+            {% if v.asking_price %} &middot; Asking: ${{ "{:,.0f}".format(v.asking_price) }}{% endif %}
+            {% if v.days_on_lot %} &middot; {{ v.days_on_lot }} days{% endif %}
+            {% if v.dealer_name %} &middot; {{ v.dealer_name }}{% endif %}
+        </div>
+        {% if v.notes %}
+        <div style="font-size: 13px; color: #64748b; font-style: italic; margin-top: 4px;">{{ v.notes }}</div>
+        {% endif %}
+        <div style="margin-top: 8px;">
+            <button class="btn btn-danger btn-sm"
+                    hx-delete="/account/saved/{{ v.id }}"
+                    hx-target="#saved-list"
+                    hx-swap="innerHTML"
+                    hx-confirm="Remove this saved vehicle?">Remove</button>
+        </div>
+    </div>
+    {% if v.deal_score %}
+    <div class="saved-card__score saved-card__score--{% if v.deal_score >= 70 %}great{% elif v.deal_score >= 40 %}good{% else %}poor{% endif %}">
+        {{ v.deal_score }}
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+{% else %}
+<div class="card" style="text-align: center; padding: 32px; color: #64748b;">
+    <p>No saved vehicles yet. Use the form above to save vehicles you're interested in.</p>
+</div>
+{% endif %}

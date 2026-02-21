@@ -1,0 +1,51 @@
+{% extends "web/base.html" %}
+
+{% block title %}Pricing - Free vs Pro Plans | DealHawk{% endblock %}
+{% block meta_description %}Compare DealHawk Free and Pro plans. Free tools include deal scoring, VIN decoding, tax calculations, and market data. Pro adds saved vehicles and deal alerts.{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header" style="text-align: center;">
+        <h1>Simple, Transparent Pricing</h1>
+        <p>All four tools are free forever. Pro unlocks saved vehicles and deal alerts.</p>
+    </div>
+
+    <div class="pricing-grid">
+        <div class="pricing-card">
+            <h3>Free</h3>
+            <div class="pricing-price">$0<span>/forever</span></div>
+            <ul class="pricing-features">
+                <li class="included">Deal Scorer (unlimited)</li>
+                <li class="included">VIN Decoder (unlimited)</li>
+                <li class="included">Section 179 Calculator</li>
+                <li class="included">Market Data Browser</li>
+                <li class="excluded">Saved Vehicles</li>
+                <li class="excluded">Deal Alerts</li>
+            </ul>
+            <a href="/tools/score" class="btn btn-secondary btn-full">Get Started</a>
+        </div>
+
+        <div class="pricing-card pricing-card--pro">
+            <h3>Pro</h3>
+            <div class="pricing-price">$9<span>/month</span></div>
+            <ul class="pricing-features">
+                <li class="included">Everything in Free</li>
+                <li class="included">Save &amp; track vehicles</li>
+                <li class="included">Custom deal alerts</li>
+                <li class="included">Email notifications</li>
+                <li class="included">Priority support</li>
+                <li class="included">Early access to new tools</li>
+            </ul>
+            {% if user and user.subscription_tier == 'pro' %}
+            <span class="btn btn-secondary btn-full" style="cursor: default;">Current Plan</span>
+            {% elif user %}
+            <form action="/account/upgrade" method="post" style="margin: 0;">
+                <button type="submit" class="btn btn-primary btn-full">Upgrade to Pro</button>
+            </form>
+            {% else %}
+            <a href="/register" class="btn btn-primary btn-full">Sign Up Free</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

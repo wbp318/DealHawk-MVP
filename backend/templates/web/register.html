@@ -1,0 +1,37 @@
+{% extends "web/base.html" %}
+
+{% block title %}Create Account | DealHawk{% endblock %}
+{% block meta_description %}Create a free DealHawk account to save vehicles and set up deal alerts.{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>DealHawk</h1>
+        <p class="subtitle">Create your free account</p>
+
+        {% if error %}
+        <div class="alert-box alert-box--error">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" action="/register">
+            <div class="form-group">
+                <label for="display_name">Display Name (optional)</label>
+                <input type="text" id="display_name" name="display_name" class="form-input" placeholder="Your name" maxlength="100">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-input" placeholder="At least 8 characters" minlength="8" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+        </form>
+
+        <p class="auth-footer">
+            Already have an account? <a href="/login">Sign in</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

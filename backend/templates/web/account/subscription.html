@@ -1,0 +1,60 @@
+{% extends "web/base.html" %}
+
+{% block title %}Subscription | DealHawk{% endblock %}
+
+{% block content %}
+<div class="container container--medium">
+    <div class="account-header">
+        <h1>Subscription</h1>
+        <span class="tier-badge tier-badge--{{ user.subscription_tier }}">{{ user.subscription_tier|upper }}</span>
+    </div>
+
+    <nav class="account-nav">
+        <a href="/account">Overview</a>
+        <a href="/account/saved">Saved Vehicles</a>
+        <a href="/account/alerts">Deal Alerts</a>
+        <a href="/account/subscription" class="active">Subscription</a>
+    </nav>
+
+    {% if success %}
+    <div class="alert-box alert-box--success">
+        Your subscription has been updated successfully.
+    </div>
+    {% endif %}
+
+    {% if request.query_params.get('error') %}
+    <div class="alert-box alert-box--error">
+        Something went wrong. Please try again or contact support.
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-title">Current Plan</div>
+        <table class="price-table">
+            <tr><td>Plan</td><td>{{ user.subscription_tier|title }}</td></tr>
+            <tr><td>Status</td><td>{{ user.subscription_status|title }}</td></tr>
+            {% if user.subscription_current_period_end %}
+            <tr><td>Current Period Ends</td><td>{{ user.subscription_current_period_end.strftime('%B %d, %Y') }}</td></tr>
+            {% endif %}
+        </table>
+    </div>
+
+    {% if user.subscription_tier == 'free' %}
+    <div class="card" style="text-align: center; padding: 32px;">
+        <h3 style="font-size: 18px; margin-bottom: 8px;">Upgrade to Pro</h3>
+        <p style="color: #64748b; margin-bottom: 16px;">Unlock saved vehicles, deal alerts, and email notifications for $9/month.</p>
+        <form action="/account/upgrade" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-upgrade">Upgrade to Pro</button>
+        </form>
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 32px;">
+        <h3 style="font-size: 18px; margin-bottom: 8px;">Manage Billing</h3>
+        <p style="color: #64748b; margin-bottom: 16px;">Update payment method, view invoices, or cancel your subscription.</p>
+        <form action="/account/manage-billing" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-secondary">Manage Billing</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

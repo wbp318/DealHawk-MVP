@@ -1,0 +1,86 @@
+{% extends "web/base.html" %}
+
+{% block title %}Saved Vehicles | DealHawk{% endblock %}
+
+{% block content %}
+<div class="container container--medium">
+    <div class="account-header">
+        <h1>Saved Vehicles</h1>
+        <span class="tier-badge tier-badge--{{ user.subscription_tier }}">{{ user.subscription_tier|upper }}</span>
+    </div>
+
+    <nav class="account-nav">
+        <a href="/account">Overview</a>
+        <a href="/account/saved" class="active">Saved Vehicles</a>
+        <a href="/account/alerts">Deal Alerts</a>
+        <a href="/account/subscription">Subscription</a>
+    </nav>
+
+    {% if not is_pro %}
+    <div class="pro-gate card">
+        <h2>Pro Feature</h2>
+        <p>Save vehicles you're interested in and track their deals over time.</p>
+        <form action="/account/upgrade" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-upgrade">Upgrade to Pro - $9/month</button>
+        </form>
+    </div>
+    {% else %}
+
+    <div class="card" style="margin-bottom: 20px;">
+        <div class="card-title">Save a Vehicle</div>
+        <form hx-post="/account/saved" hx-target="#saved-list" hx-swap="innerHTML" hx-indicator="#save-loading">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="vin">VIN</label>
+                    <input type="text" id="vin" name="vin" class="form-input" maxlength="17">
+                </div>
+                <div class="form-group">
+                    <label for="year">Year</label>
+                    <input type="number" id="year" name="year" class="form-input" min="1980" max="2030">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="make">Make</label>
+                    <input type="text" id="make" name="make" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="model">Model</label>
+                    <input type="text" id="model" name="model" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="trim">Trim</label>
+                    <input type="text" id="trim" name="trim" class="form-input">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="asking_price">Asking Price</label>
+                    <input type="number" id="asking_price" name="asking_price" class="form-input" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="msrp">MSRP</label>
+                    <input type="number" id="msrp" name="msrp" class="form-input" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="days_on_lot">Days on Lot</label>
+                    <input type="number" id="days_on_lot" name="days_on_lot" class="form-input" min="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <input type="text" id="notes" name="notes" class="form-input" placeholder="Any notes about this vehicle">
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <span class="htmx-indicator" id="save-loading"><span class="spinner"></span></span>
+                Save Vehicle
+            </button>
+        </form>
+    </div>
+
+    <div id="saved-list">
+        {% include "web/partials/_saved_list.html" %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

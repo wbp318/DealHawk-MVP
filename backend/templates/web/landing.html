@@ -1,0 +1,51 @@
+{% extends "web/base.html" %}
+
+{% block title %}DealHawk - Score Vehicle Deals, Decode VINs, Calculate Tax Savings{% endblock %}
+{% block meta_description %}Free tools to score vehicle deals, decode VINs, calculate Section 179 tax deductions, and browse market data. Know what dealers pay and negotiate smarter.{% endblock %}
+{% block meta_extra %}
+<meta property="og:title" content="DealHawk - Vehicle Deal Intelligence">
+<meta property="og:description" content="Free tools to score vehicle deals, decode VINs, and calculate tax savings.">
+<meta property="og:type" content="website">
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Know What Dealers Pay.<br>Negotiate Smarter.</h1>
+    <p>Free tools that calculate true dealer cost, score deals from 0-100, decode VINs, and estimate Section 179 tax savings.</p>
+    <a href="/tools/score" class="hero-cta">Score a Deal Now</a>
+</section>
+
+<div class="container">
+    <div class="cards-grid">
+        <a href="/tools/score" class="feature-card">
+            <div class="feature-card__icon">&#127919;</div>
+            <h3>Deal Scorer</h3>
+            <p>Get a 0-100 score on any vehicle deal. See true dealer cost, negotiation targets, and how much leverage you have.</p>
+        </a>
+
+        <a href="/tools/vin" class="feature-card">
+            <div class="feature-card__icon">&#128269;</div>
+            <h3>VIN Decoder</h3>
+            <p>Decode any VIN to see year, make, model, trim, engine, drivetrain, and manufacturing details.</p>
+        </a>
+
+        <a href="/tools/tax" class="feature-card">
+            <div class="feature-card__icon">&#128176;</div>
+            <h3>Section 179 Calculator</h3>
+            <p>Estimate your first-year tax deduction for business vehicles. Includes GVWR lookup and financing scenarios.</p>
+        </a>
+
+        <a href="/tools/market" class="feature-card">
+            <div class="feature-card__icon">&#128200;</div>
+            <h3>Market Data</h3>
+            <p>Check days supply, price trends, and available incentives for any make and model.</p>
+        </a>
+    </div>
+
+    <section class="info-section">
+        <h2>How DealHawk Scores Deals</h2>
+        <p>Every deal gets a weighted score based on five factors: price vs. true dealer cost (35%), days on lot (25%), available incentives (20%), market supply (12%), and timing (8%). Higher scores mean more savings for you.</p>
+        <p>True dealer cost goes beyond invoice price. We subtract holdback (the hidden rebate dealers get from manufacturers) and add any dealer cash incentives to calculate what the dealer actually paid. That's your starting point for negotiation.</p>
+    </section>
+</div>
+{% endblock %}

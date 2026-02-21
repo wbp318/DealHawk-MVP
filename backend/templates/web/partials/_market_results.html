@@ -1,0 +1,94 @@
+{% set t = trends %}
+{% set s = stats %}
+
+<div class="card">
+    <div class="card-title">Market Overview: {{ make }} {{ model }}</div>
+
+    <div class="market-grid">
+        <div class="market-item">
+            <div class="market-item__label">Days Supply</div>
+            <div class="market-item__value">{{ t.days_supply }}</div>
+            <div class="market-item__note">Industry avg: {{ t.industry_avg_days_supply }}</div>
+        </div>
+
+        <div class="market-item">
+            <div class="market-item__label">Supply Level</div>
+            <div class="market-item__value">
+                {% if t.supply_level == 'oversupplied' %}
+                <span class="market-badge market-badge--great">Oversupplied</span>
+                {% elif t.supply_level == 'balanced' %}
+                <span class="market-badge market-badge--good">Balanced</span>
+                {% else %}
+                <span class="market-badge market-badge--poor">Undersupplied</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="market-item">
+            <div class="market-item__label">Price Trend</div>
+            <div class="market-item__value">
+                {% if t.price_trend == 'declining' %}
+                <span style="color: #16a34a; font-weight: 700;">Declining</span>
+                {% elif t.price_trend == 'stable' %}
+                <span style="color: #ca8a04; font-weight: 700;">Stable</span>
+                {% else %}
+                <span style="color: #dc2626; font-weight: 700;">Rising</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="market-item">
+            <div class="market-item__label">Supply Ratio</div>
+            <div class="market-item__value">{{ t.supply_ratio }}x</div>
+            <div class="market-item__note {% if t.supply_ratio > 1.3 %}market-item__note--green{% endif %}">
+                {% if t.supply_ratio > 1.3 %}Buyer advantage{% elif t.supply_ratio < 0.7 %}Seller advantage{% else %}Neutral{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">Incentives</div>
+    <div class="market-grid">
+        <div class="market-item">
+            <div class="market-item__label">Active Incentives</div>
+            <div class="market-item__value">{{ t.active_incentive_count }}</div>
+        </div>
+        <div class="market-item">
+            <div class="market-item__label">Total Value</div>
+            <div class="market-item__value">${{ "{:,.0f}".format(t.total_incentive_value) }}</div>
+        </div>
+    </div>
+</div>
+
+{% if s %}
+<div class="card">
+    <div class="card-title">Pricing Stats</div>
+    <div class="market-grid">
+        <div class="market-item">
+            <div class="market-item__label">Average Price</div>
+            <div class="market-item__value">${{ "{:,.0f}".format(s.avg_price) }}</div>
+        </div>
+        <div class="market-item">
+            <div class="market-item__label">Price Range</div>
+            <div class="market-item__value" style="font-size: 18px;">
+                ${{ "{:,.0f}".format(s.price_range_low) }} &ndash; ${{ "{:,.0f}".format(s.price_range_high) }}
+            </div>
+        </div>
+        <div class="market-item">
+            <div class="market-item__label">Median Days on Lot</div>
+            <div class="market-item__value">{{ s.median_days_on_lot }}</div>
+        </div>
+        {% if s.total_active_listings > 0 %}
+        <div class="market-item">
+            <div class="market-item__label">Active Listings</div>
+            <div class="market-item__value">{{ "{:,}".format(s.total_active_listings) }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<p style="font-size: 12px; color: #94a3b8; margin-top: 8px;">
+    Data source: {{ t.source }} &middot; As of {{ t.as_of }}
+</p>

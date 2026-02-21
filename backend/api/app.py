@@ -13,6 +13,7 @@ from backend.api.dealer_routes import dealer_router
 from backend.api.dealer_dashboard import dashboard_router
 from backend.api.subscription_routes import subscription_router
 from backend.api.webhook_routes import webhook_router
+from backend.api.web_app import web_router
 from backend.database.db import init_db
 from backend.config.settings import get_settings
 
@@ -56,6 +57,7 @@ def create_app() -> FastAPI:
     app.include_router(dashboard_router)
     app.include_router(subscription_router)
     app.include_router(webhook_router)
+    app.include_router(web_router)  # Registered last to avoid prefix conflicts
 
     @app.get("/health", tags=["health"])
     def health_check():

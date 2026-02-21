@@ -1,0 +1,28 @@
+{% set r = result %}
+
+<div class="card">
+    <div class="card-title">Vehicle Information</div>
+
+    {% if r.year and r.make and r.model %}
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 16px;">
+        {{ r.year }} {{ r.make }} {{ r.model }}{% if r.trim %} {{ r.trim }}{% endif %}
+    </h2>
+    {% endif %}
+
+    <div class="vin-grid">
+        {% for label, key in [('VIN', 'vin'), ('Year', 'year'), ('Make', 'make'), ('Model', 'model'), ('Trim', 'trim'), ('Body Class', 'body_class'), ('Drive Type', 'drive_type'), ('Engine Cylinders', 'engine_cylinders'), ('Engine Displacement (L)', 'engine_displacement'), ('Engine Type', 'engine_type'), ('Fuel Type', 'fuel_type'), ('GVWR', 'gvwr'), ('Manufacturer', 'manufacturer'), ('Plant City', 'plant_city'), ('Plant State', 'plant_state'), ('Plant Country', 'plant_country')] %}
+        {% if r[key] is not none %}
+        <div class="vin-row">
+            <span class="vin-label">{{ label }}</span>
+            <span class="vin-value">{{ r[key] }}</span>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    {% if r.get('decode_errors') %}
+    <p style="font-size: 12px; color: #ca8a04; margin-top: 12px;">
+        Note: {{ r.decode_errors }}
+    </p>
+    {% endif %}
+</div>

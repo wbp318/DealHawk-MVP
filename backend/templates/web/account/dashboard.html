@@ -1,0 +1,53 @@
+{% extends "web/base.html" %}
+
+{% block title %}Account | DealHawk{% endblock %}
+
+{% block content %}
+<div class="container container--medium">
+    <div class="account-header">
+        <h1>Welcome{% if user.display_name %}, {{ user.display_name }}{% endif %}</h1>
+        <span class="tier-badge tier-badge--{{ user.subscription_tier }}">{{ user.subscription_tier|upper }}</span>
+    </div>
+
+    <nav class="account-nav">
+        <a href="/account" class="active">Overview</a>
+        <a href="/account/saved">Saved Vehicles</a>
+        <a href="/account/alerts">Deal Alerts</a>
+        <a href="/account/subscription">Subscription</a>
+    </nav>
+
+    <div class="stat-cards">
+        <div class="stat-card">
+            <div class="stat-card__value">{{ saved_count }}</div>
+            <div class="stat-card__label">Saved Vehicles</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card__value">{{ alert_count }}</div>
+            <div class="stat-card__label">Deal Alerts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card__value">{{ user.subscription_tier|title }}</div>
+            <div class="stat-card__label">Current Plan</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Account Details</div>
+        <table class="price-table">
+            <tr><td>Email</td><td>{{ user.email }}</td></tr>
+            <tr><td>Member Since</td><td>{{ user.created_at.strftime('%B %d, %Y') }}</td></tr>
+            <tr><td>Subscription</td><td>{{ user.subscription_tier|title }} ({{ user.subscription_status }})</td></tr>
+        </table>
+    </div>
+
+    {% if user.subscription_tier == 'free' %}
+    <div class="card" style="text-align: center; padding: 32px;">
+        <h3 style="font-size: 18px; margin-bottom: 8px;">Upgrade to Pro</h3>
+        <p style="color: #64748b; margin-bottom: 16px;">Save vehicles, create deal alerts, and get email notifications.</p>
+        <form action="/account/upgrade" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-upgrade">Upgrade for $9/month</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

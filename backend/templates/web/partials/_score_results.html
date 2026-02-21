@@ -1,0 +1,89 @@
+{% set score = result.score %}
+{% set grade = result.grade %}
+{% set breakdown = result.breakdown %}
+{% set pricing = result.pricing %}
+{% set offers = result.offers %}
+
+{% if score >= 70 %}{% set level = "great" %}{% elif score >= 40 %}{% set level = "good" %}{% else %}{% set level = "poor" %}{% endif %}
+
+<!-- Score Gauge -->
+<div class="card score-gauge">
+    <div class="score-gauge__circle score-gauge__circle--{{ level }}">
+        <div class="score-gauge__number">{{ score }}</div>
+        <div class="score-gauge__grade">{{ grade }}</div>
+    </div>
+    <div class="score-gauge__label">
+        {% if score >= 80 %}Excellent deal &mdash; strong buyer leverage{% elif score >= 60 %}Good deal &mdash; room to negotiate{% elif score >= 40 %}Fair deal &mdash; some leverage available{% else %}Below average &mdash; limited leverage{% endif %}
+    </div>
+</div>
+
+<!-- Score Breakdown -->
+<div class="card">
+    <div class="card-title">Score Breakdown</div>
+    <div class="score-bars">
+        {% for key, data in [('price', breakdown.price), ('days_on_lot', breakdown.days_on_lot), ('incentives', breakdown.incentives), ('market_supply', breakdown.market_supply), ('timing', breakdown.timing)] %}
+        {% set bar_score = data.score %}
+        {% if bar_score >= 70 %}{% set bar_level = "great" %}{% elif bar_score >= 40 %}{% set bar_level = "good" %}{% else %}{% set bar_level = "poor" %}{% endif %}
+        <div class="score-bar">
+            <span class="score-bar__label">{{ key|replace('_', ' ')|title }} ({{ data.weight }})</span>
+            <div class="score-bar__track">
+                <div class="score-bar__fill score-bar__fill--{{ bar_level }}" style="width: {{ bar_score }}%"></div>
+            </div>
+            <span class="score-bar__value">{{ bar_score|int }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Price Breakdown -->
+<div class="card">
+    <div class="card-title">Price Breakdown</div>
+    <table class="price-table">
+        <tr><td>MSRP</td><td>${{ "{:,.0f}".format(pricing.msrp) }}</td></tr>
+        <tr><td>Invoice Price</td><td>${{ "{:,.0f}".format(pricing.invoice_price) }}</td></tr>
+        <tr><td>Holdback</td><td class="highlight">-${{ "{:,.0f}".format(pricing.holdback) }}</td></tr>
+        {% if pricing.dealer_cash %}
+        <tr><td>Dealer Cash</td><td class="highlight">-${{ "{:,.0f}".format(pricing.dealer_cash) }}</td></tr>
+        {% endif %}
+        <tr class="total-row"><td>True Dealer Cost</td><td>${{ "{:,.0f}".format(pricing.true_dealer_cost) }}</td></tr>
+        <tr><td>Asking Price</td><td {% if asking_price > pricing.msrp %}class="negative"{% endif %}>${{ "{:,.0f}".format(asking_price) }}</td></tr>
+        <tr><td>Dealer Markup over Cost</td>
+            <td {% if asking_price > pricing.true_dealer_cost %}class="negative"{% else %}class="highlight"{% endif %}>
+                ${{ "{:,.0f}".format(asking_price - pricing.true_dealer_cost) }}
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- Offer Targets -->
+<div class="card">
+    <div class="card-title">Negotiation Targets</div>
+    <div class="offers">
+        <div class="offer offer--aggressive">
+            <div>
+                <div class="offer__label">Aggressive Offer</div>
+                <div class="offer__sublabel">Low-ball starting point</div>
+            </div>
+            <div class="offer__value">${{ "{:,.0f}".format(offers.aggressive) }}</div>
+        </div>
+        <div class="offer offer--reasonable">
+            <div>
+                <div class="offer__label">Reasonable Offer</div>
+                <div class="offer__sublabel">Fair negotiation start</div>
+            </div>
+            <div class="offer__value">${{ "{:,.0f}".format(offers.reasonable) }}</div>
+        </div>
+        <div class="offer offer--likely">
+            <div>
+                <div class="offer__label">Likely Settlement</div>
+                <div class="offer__sublabel">Where you&rsquo;ll probably land</div>
+            </div>
+            <div class="offer__value">${{ "{:,.0f}".format(offers.likely) }}</div>
+        </div>
+    </div>
+    {% if offers.carrying_costs > 0 %}
+    <p style="font-size: 13px; color: #64748b; margin-top: 12px;">
+        Estimated dealer carrying costs: ${{ "{:,.0f}".format(offers.carrying_costs) }} ($7.90/day floor plan interest)
+    </p>
+    {% endif %}
+</div>

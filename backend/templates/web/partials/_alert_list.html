@@ -1,0 +1,37 @@
+{% if alerts %}
+{% for a in alerts %}
+<div class="card">
+    <div class="alert-card__header">
+        <span class="alert-card__title">{{ a.name }}</span>
+        <span class="alert-card__status alert-card__status--{% if a.is_active %}active{% else %}paused{% endif %}">
+            {% if a.is_active %}Active{% else %}Paused{% endif %}
+        </span>
+    </div>
+    <div class="alert-card__criteria">
+        {% if a.make %}{{ a.make }}{% endif %}
+        {% if a.model %} {{ a.model }}{% endif %}
+        {% if a.year_min or a.year_max %} &middot; {% if a.year_min %}{{ a.year_min }}{% endif %}{% if a.year_min and a.year_max %}-{% endif %}{% if a.year_max %}{{ a.year_max }}{% endif %}{% endif %}
+        {% if a.price_max %} &middot; Max ${{ "{:,.0f}".format(a.price_max) }}{% endif %}
+        {% if a.score_min %} &middot; Score {{ a.score_min }}+{% endif %}
+        {% if a.days_on_lot_min %} &middot; {{ a.days_on_lot_min }}+ days{% endif %}
+    </div>
+    <div class="alert-card__actions">
+        <button class="btn btn-secondary btn-sm"
+                hx-patch="/account/alerts/{{ a.id }}/toggle"
+                hx-target="#alert-list"
+                hx-swap="innerHTML">
+            {% if a.is_active %}Pause{% else %}Activate{% endif %}
+        </button>
+        <button class="btn btn-danger btn-sm"
+                hx-delete="/account/alerts/{{ a.id }}"
+                hx-target="#alert-list"
+                hx-swap="innerHTML"
+                hx-confirm="Delete this alert?">Delete</button>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="card" style="text-align: center; padding: 32px; color: #64748b;">
+    <p>No alerts yet. Create one above to get notified about matching deals.</p>
+</div>
+{% endif %}

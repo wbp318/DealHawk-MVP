@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}DealHawk - Vehicle Deal Intelligence{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Score vehicle deals, decode VINs, calculate Section 179 deductions, and get market intelligence. Free tools for smarter car buying.{% endblock %}">
+    {% block meta_extra %}{% endblock %}
+    <link rel="stylesheet" href="/static/web.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
+<body>
+    <nav class="site-nav">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">DealHawk</a>
+            <button class="nav-toggle" onclick="document.getElementById('nav-menu').classList.toggle('open')" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="nav-menu">
+                <li><a href="/tools/score" {% if active == 'score' %}class="active"{% endif %}>Deal Scorer</a></li>
+                <li><a href="/tools/vin" {% if active == 'vin' %}class="active"{% endif %}>VIN Decoder</a></li>
+                <li><a href="/tools/tax" {% if active == 'tax' %}class="active"{% endif %}>Tax Calculator</a></li>
+                <li><a href="/tools/market" {% if active == 'market' %}class="active"{% endif %}>Market Data</a></li>
+                <li><a href="/pricing" {% if active == 'pricing' %}class="active"{% endif %}>Pricing</a></li>
+                {% if user %}
+                <li><a href="/account" {% if active == 'account' %}class="active"{% endif %}>Account</a></li>
+                <li><a href="/logout">Logout</a></li>
+                {% else %}
+                <li><a href="/login" class="nav-cta">Sign In</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <span>DealHawk &mdash; Vehicle Deal Intelligence</span>
+            <ul class="footer-links">
+                <li><a href="/tools/score">Deal Scorer</a></li>
+                <li><a href="/tools/tax">Tax Calculator</a></li>
+                <li><a href="/pricing">Pricing</a></li>
+            </ul>
+        </div>
+    </footer>
+</body>
+</html>

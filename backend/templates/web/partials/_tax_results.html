@@ -1,0 +1,86 @@
+{% set r = result %}
+
+{% if not r.qualifies %}
+<!-- Does not qualify -->
+<div class="card" style="text-align: center;">
+    <span class="tax-badge tax-badge--no">Does Not Qualify</span>
+    <p class="tax-note" style="margin-top: 12px;">{{ r.reason }}</p>
+</div>
+{% else %}
+<!-- Qualifies -->
+<div class="card" style="text-align: center;">
+    <span class="tax-badge tax-badge--yes">Qualifies for Section 179</span>
+
+    <div class="tax-big-number tax-big-number--green" style="margin-top: 16px;">
+        <div class="tax-big-number__label">First-Year Deduction</div>
+        <div class="tax-big-number__value">${{ "{:,.0f}".format(r.first_year_deduction) }}</div>
+    </div>
+
+    <div style="display: flex; gap: 24px; justify-content: center; margin: 16px 0;">
+        <div class="tax-big-number">
+            <div class="tax-big-number__label">Total Tax Savings</div>
+            <div class="tax-big-number__value" style="font-size: 24px; color: #16a34a;">${{ "{:,.0f}".format(r.total_tax_savings) }}</div>
+        </div>
+        <div class="tax-big-number">
+            <div class="tax-big-number__label">Effective Cost</div>
+            <div class="tax-big-number__value" style="font-size: 24px;">${{ "{:,.0f}".format(r.effective_cost_after_tax) }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Detail breakdown -->
+<div class="card">
+    <div class="card-title">Deduction Details</div>
+    <table class="price-table">
+        <tr><td>Vehicle Price</td><td>${{ "{:,.0f}".format(r.vehicle_price) }}</td></tr>
+        <tr><td>Business Use</td><td>{{ r.business_use_pct }}%</td></tr>
+        {% if r.gvwr %}<tr><td>GVWR</td><td>{{ "{:,}".format(r.gvwr) }} lbs</td></tr>{% endif %}
+        <tr class="total-row"><td>First-Year Deduction</td><td class="highlight">${{ "{:,.0f}".format(r.first_year_deduction) }}</td></tr>
+        <tr><td>Federal Tax Savings</td><td>${{ "{:,.0f}".format(r.federal_tax_savings) }}</td></tr>
+        {% if r.state_tax_savings > 0 %}
+        <tr><td>State Tax Savings</td><td>${{ "{:,.0f}".format(r.state_tax_savings) }}</td></tr>
+        {% endif %}
+        <tr><td>Total Tax Savings</td><td class="highlight">${{ "{:,.0f}".format(r.total_tax_savings) }}</td></tr>
+        <tr><td>Effective Cost After Tax</td><td>${{ "{:,.0f}".format(r.effective_cost_after_tax) }}</td></tr>
+    </table>
+</div>
+
+{% if r.gvwr_note %}
+<div class="card">
+    <div class="card-title">GVWR Note</div>
+    <p class="tax-note">{{ r.gvwr_note }}</p>
+</div>
+{% endif %}
+
+{% if r.cap_note %}
+<div class="card">
+    <div class="card-title">Deduction Cap</div>
+    <p class="tax-note">{{ r.cap_note }}</p>
+</div>
+{% endif %}
+
+{% if r.financing %}
+<div class="card">
+    <div class="card-title">Financing Scenario</div>
+    <table class="price-table">
+        {% if r.financing.down_payment > 0 %}
+        <tr><td>Down Payment</td><td>${{ "{:,.0f}".format(r.financing.down_payment) }}</td></tr>
+        {% endif %}
+        <tr><td>Loan Amount</td><td>${{ "{:,.0f}".format(r.financing.loan_amount) }}</td></tr>
+        <tr><td>Monthly Payment</td><td>${{ "{:,.0f}".format(r.financing.monthly_payment) }}</td></tr>
+        {% if r.financing.total_interest > 0 %}
+        <tr><td>Total Interest</td><td class="negative">${{ "{:,.0f}".format(r.financing.total_interest) }}</td></tr>
+        {% endif %}
+        <tr><td>Monthly Tax Benefit (Year 1)</td><td class="highlight">${{ "{:,.0f}".format(r.financing.monthly_tax_benefit) }}</td></tr>
+        <tr class="total-row"><td>Effective Monthly Cost (Year 1)</td><td>${{ "{:,.0f}".format(r.financing.effective_monthly_cost) }}</td></tr>
+    </table>
+</div>
+{% endif %}
+
+<div class="tax-disclaimer">
+    This is an estimate for informational purposes only. Tax year {{ r.tax_year }}.
+    Section 179 limit: ${{ "{:,}".format(r.section_179_limit) }}.
+    Bonus depreciation: {{ (r.bonus_depreciation_rate * 100)|int }}%.
+    Consult a tax professional for advice specific to your situation.
+</div>
+{% endif %}

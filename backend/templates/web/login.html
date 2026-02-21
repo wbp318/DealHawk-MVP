@@ -1,0 +1,33 @@
+{% extends "web/base.html" %}
+
+{% block title %}Sign In | DealHawk{% endblock %}
+{% block meta_description %}Sign in to your DealHawk account to access saved vehicles, deal alerts, and Pro features.{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>DealHawk</h1>
+        <p class="subtitle">Sign in to your account</p>
+
+        {% if error %}
+        <div class="alert-box alert-box--error">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" action="/login">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-input" placeholder="Your password" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+        </form>
+
+        <p class="auth-footer">
+            Don't have an account? <a href="/register">Create one</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

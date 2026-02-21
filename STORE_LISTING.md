@@ -69,5 +69,7 @@ English
 
 ## Additional Notes
 
-- Extension requires a running backend server (self-hosted or cloud deployment)
+- Extension connects to the DealHawk backend (hosted at dealhawk-api.onrender.com or self-hosted)
+- All four free tools are also available on the DealHawk web app at the same URL -- no extension required
+- The extension adds value by scoring deals directly on dealer listing pages as you browse
 - Test card for Stripe: 4242 4242 4242 4242 (any future date, any CVC)
